@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Alejandro V. Rojas. All rights reserved. MIT license.
 
 /**
- * v0.0.2
+ * v1.0.0
  *
  * Nano template engine – a very simple semi logic-less template engine.
  * This was initially made for playing around with simple prototypes deployed
