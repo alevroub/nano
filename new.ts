@@ -173,18 +173,21 @@ const TEST_INPUT = `
 	<div>Hei</div>
 	<div>{{ yo }}</div>
 	<div>Hei</div>
+
 	{% if %}
-		<div>E</div>
+		<div>IF</div>
+	{% else %}
+		<div>ELSE</div>
 	{% endif %}
+
 	{% for a in AA %}
 		{% for b in BB %}
 			<div>{{ inside_b }}</div>
 		{% endfor %}
-	{% endfor %}
-	`
+	{% endfor %}`
 
 try {
-	console.log(analyze(TEST_INPUT))
+	console.log(JSON.stringify(analyze(TEST_INPUT), null, 2))
 } catch(error) {
 	console.log('%c' + error.message, 'color: red')
 }
