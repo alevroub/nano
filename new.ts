@@ -116,10 +116,21 @@ function analyze(input: string): Tokens {
 
 				if (statement.startsWith('end')) {
 					const end_statement_type = statement.slice(3); //endif -> if
-					const last_token = nested_stack.pop();
+					let last_token = nested_stack.pop();
+
+					if (last_token.value === 'else') {
+						/**
+						 * first push this token to the stack and pop the next one
+						 * which will have to be an if statement, otherwise a
+						 * statement mismatch will occur throwing a syntax error
+						 **/
+
+						output_token(last_token);
+						last_token = nested_stack.pop();
+					}
 
 					if (!last_token) {
-						throw new Error('Syntax error: duplicate closing tags');
+						throw new Error('Syntax error: too many closing tags');
 					}
 
 					if (!last_token.value.startsWith(end_statement_type)) {
