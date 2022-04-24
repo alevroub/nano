@@ -15,90 +15,168 @@
 
 /**
  *
- * TOKEN TYPES
+ *	1. analyze
+ * 	input -> lexemes -> tokens
  *
- * value_raw					<div>hello</div>
- * value_literal				"quoted"
- * value_variable				variable.dot.separated
- * value_filter				variable | filter_name
- * value_truthy				value
- * value_truthy_negated		not value
- * expression_ternary		variable ? 'value_if_true' : 'value_if_false'
- * expression_logical		variable and
- * tag_escaped					{{{ variable_escaped }}}
- * tag_literal					{{ variable }}
- * block_for					{% for num, index in numbers | unique %}
- * block_if						{% if variable_1 and not variable_3 %}
- * block_else					{% else %}
- * block_include				{% include 'path/to/file.html' %}
- * block_comment				{# commented #}
+ * 	TOKEN TYPES
+ * 		0 - VARIABLE 		{{ variable }}
+ * 		1 - COMMENT 		{# comment #}
+ * 		2 - BLOCK 			{% if/else/for %}
+ * 		3 - TEXT				<div>text</div>
  *
- **/
-
-/**
+ * 2. parse
+ * 	tokens -> nodes
  *
- * {
- * 	type: 'block_if',
- * 	value: [
- * 		{
- * 			type: 'expression_logical',
- * 			left: {
+ * 	NODE TYPES
+ * 		value_raw					<div>hello</div>
+ * 		value_literal				"quoted"
+ * 		value_variable				variable.dot.separated
+ * 		value_filter				variable | filter_name
+ * 		value_truthy				value
+ * 		value_truthy_negated		not value
+ * 		expression_ternary		variable ? 'value_if_true' : 'value_if_false'
+ * 		expression_logical		variable and
+ * 		tag_escaped					{{{ variable_escaped }}}
+ * 		tag_literal					{{ variable }}
+ * 		block_for					{% for num, index in numbers | unique %}
+ * 		block_if						{% if variable_1 and not variable_3 %}
+ * 		block_else					{% else %}
+ * 		block_include				{@ 'path/to/file.html' @}
+ * 		block_comment				{# commented #}
  *
- * 			}
- * 		}
- * 	]
- * }
- *
+ * 3. render (interpreter)
+ * 	nodes -> output
  *
  **/
 
 /**
  *
- * 1. the lexer that splits the string input into lexemes
+ * 1. lexer that splits the string input into lexemes and returns
+ * 	tokens. the goal in this step is to make sure the *structure* of
+ * 	all blocks are valid, e.g. check for missing or duplicate tags.
+ * 	invalid block statements or syntax errors are checked in the next
+ * 	step when the tokens are used to create nodes.
  *
  **/
-
 function analyze(input: string): Tokens {
-	/**
-	 *
-	 * possible leximes match types:
-	 * HTML, TAG, TAG_ESCAPED, BLOCK, COMMENT
-	 *
-	 **/
-	const lexeme_types = ['HTML', 'TAG', 'TAG_ESCAPED', 'BLOCK', 'COMMENT'];
-	const lexemes: string[] = input.split(/({{.*?}})|({{{.*?}}})|({%.*?%})|({#.*?#})/g).filter(v => v);
+	const RE_VARIABLE = /{{.*?}}/;
+	const RE_COMMENT = /{#.*?#}/;
+	const RE_BLOCK = /{%.*?%}/;
+	const RE_ALL = /({{.*?}}|{#.*?#}|{%.*?%})/;
 
-	/**
-	 *
-	 * initial scan that goes through each lexeme and
-	 * then returns an initial structure to tokenize.
-	 * the most important part here is grouping blocks.
-	 * this is there you throw missing end tag errors
-	 *
-	 * {% for a in aa %}
-	 * 	{% for b in bb %}
-	 * 		{{ test }}
-	 * 	{% endfor %}
-	 * {% endfor %}
-	 *
-	 * {
-	 * 	type: 'BLOCK',
-	 * 	match: for a in aa,
-	 * 	value: {
-	 *			type: 'BLOCK',
-	 * 		match: for b in bb,
-	 * 		value: {
-	 *				type: 'TAG',
-	 * 			match: 'test'
-	 * 		}
-	 * 	}
-	 * }
-	 *
-	 **/
-	function traverse() {
-		const block_stack = [];
+	const TOKEN_TYPES = [
+		'variable',
+		'comment',
+		'block',
+		'text'
+	];
+
+	class Token {
+		constructor(type, value) {
+			this.type = type;
+			this.value = value;
+
+			if (type === 2) {
+				this.tokens = [];
+			}
+		}
 	}
+
+	function scan() {
+		const tokens = [];
+		const nested_stack = [];
+		const lexemes = input.split(RE_ALL);
+
+		function output_token(token) {
+			if (nested_stack.length > 0) {
+				nested_stack[nested_stack.length - 1].tokens.push(token);
+			} else {
+				tokens.push(token);
+			}
+		}
+
+		function return_token_type(lexeme) {
+			if (RE_VARIABLE.test(lexeme)) {
+				return 0;
+			} else if (RE_COMMENT.test(lexeme)) {
+				return 1;
+			} else if (RE_BLOCK.test(lexeme)) {
+				return 2;
+			} else {
+				return 3;
+			}
+		}
+
+		for (const lexeme of lexemes) {
+			const matches_block = RE_BLOCK.test(lexeme);
+			const token_type = return_token_type(lexeme);
+
+			if (token_type === 2) {
+				const statement = lexeme.slice(2, -2).trim();
+
+				if (statement.startsWith('end')) {
+					const end_statement_type = statement.slice(3); //endif -> if
+					const last_token = nested_stack.pop();
+
+					if (!last_token) {
+						throw new Error('Syntax error: duplicate closing tags');
+					}
+
+					if (!last_token.value.startsWith(end_statement_type)) {
+						throw new Error('Syntax error: invalid closing tag');
+					}
+
+					output_token(last_token);
+				} else {
+					nested_stack.push(new Token(token_type, statement));
+				}
+			} else {
+				output_token(new Token(token_type, lexeme));
+			}
+		}
+
+		if (nested_stack.length > 0) {
+			throw new Error('Syntax error: missing closing tag');
+		}
+
+		return tokens;
+	}
+
+	return scan();
 }
 
-/* interpreter function that renders tokens in relation to the data object */
+/**
+ *
+ * 2.	parser that takes the initial tree of tokens and builds a tree of
+ * 	nodes with more information about each token match. this step takes
+ * 	care of syntax formatting and should provide all relevant properties
+ * 	to the renderer.
+ *
+ **/
+
+function parse() {
+
+}
+
+const TEST_INPUT = `
+	<div>Hei</div>
+	<div>{{ yo }}</div>
+	<div>Hei</div>
+	{% if %}
+		<div>E</div>
+	{% endif %}
+	{% for a in AA %}
+		{% for b in BB %}
+			<div>{{ inside_b }}</div>
+		{% endfor %}
+	{% endfor %}
+	`
+
+try {
+	console.log(analyze(TEST_INPUT))
+} catch(error) {
+	console.log('%c' + error.message, 'color: red')
+}
+
+/* interpreter that renders tokens in relation to the data object */
 function render(tokens, data) {}
