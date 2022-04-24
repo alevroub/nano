@@ -82,78 +82,74 @@ function analyze(input: string): Tokens {
 		}
 	}
 
-	function scan() {
-		const tokens = [];
-		const nested_stack = [];
-		const lexemes = input.split(RE_ALL);
+	const tokens = [];
+	const block_stack = [];
+	const lexemes = input.split(RE_ALL);
 
-		function output_token(token) {
-			if (nested_stack.length > 0) {
-				nested_stack[nested_stack.length - 1].tokens.push(token);
-			} else {
-				tokens.push(token);
-			}
-		}
+	for (const lexeme of lexemes) {
+		const matches_block = RE_BLOCK.test(lexeme);
+		const token_type = return_token_type(lexeme);
 
-		function return_token_type(lexeme) {
-			if (RE_VARIABLE.test(lexeme)) {
-				return 0;
-			} else if (RE_COMMENT.test(lexeme)) {
-				return 1;
-			} else if (RE_BLOCK.test(lexeme)) {
-				return 2;
-			} else {
-				return 3;
-			}
-		}
+		if (token_type === 2) {
+			const statement = lexeme.slice(2, -2).trim();
 
-		for (const lexeme of lexemes) {
-			const matches_block = RE_BLOCK.test(lexeme);
-			const token_type = return_token_type(lexeme);
+			if (statement.startsWith('end')) {
+				const end_statement_type = statement.slice(3); //endif -> if
+				let last_token = block_stack.pop();
 
-			if (token_type === 2) {
-				const statement = lexeme.slice(2, -2).trim();
-
-				if (statement.startsWith('end')) {
-					const end_statement_type = statement.slice(3); //endif -> if
-					let last_token = nested_stack.pop();
-
-					if (last_token.value === 'else') {
-						/**
-						 * first push this token to the stack and pop the next one
-						 * which will have to be an if statement, otherwise a
-						 * statement mismatch will occur throwing a syntax error
-						 **/
-
-						output_token(last_token);
-						last_token = nested_stack.pop();
-					}
-
-					if (!last_token) {
-						throw new Error('Syntax error: too many closing tags');
-					}
-
-					if (!last_token.value.startsWith(end_statement_type)) {
-						throw new Error('Syntax error: invalid closing tag');
-					}
+				if (last_token.value === 'else') {
+					/**
+					 * first push this token to the stack and pop the next one
+					 * which will have to be an if statement, otherwise a
+					 * statement mismatch will occur throwing a syntax error
+					 **/
 
 					output_token(last_token);
-				} else {
-					nested_stack.push(new Token(token_type, statement));
+					last_token = block_stack.pop();
 				}
+
+				if (!last_token) {
+					throw new Error('Syntax error: too many closing tags');
+				}
+
+				if (!last_token.value.startsWith(end_statement_type)) {
+					throw new Error('Syntax error: invalid closing tag');
+				}
+
+				output_token(last_token);
 			} else {
-				output_token(new Token(token_type, lexeme));
+				block_stack.push(new Token(token_type, statement));
 			}
+		} else {
+			output_token(new Token(token_type, lexeme));
 		}
-
-		if (nested_stack.length > 0) {
-			throw new Error('Syntax error: missing closing tag');
-		}
-
-		return tokens;
 	}
 
-	return scan();
+	if (block_stack.length > 0) {
+		throw new Error('Syntax error: missing closing tag');
+	}
+
+	function output_token(token) {
+		if (block_stack.length > 0) {
+			block_stack[block_stack.length - 1].tokens.push(token);
+		} else {
+			tokens.push(token);
+		}
+	}
+
+	function return_token_type(lexeme) {
+		if (RE_VARIABLE.test(lexeme)) {
+			return 0;
+		} else if (RE_COMMENT.test(lexeme)) {
+			return 1;
+		} else if (RE_BLOCK.test(lexeme)) {
+			return 2;
+		} else {
+			return 3;
+		}
+	}
+
+	return tokens;
 }
 
 /**
