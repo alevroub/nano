@@ -215,13 +215,29 @@ function parse(tokens) {
  *
  * */
 
+function render(nodes, data) {
+
+}
+
+
+/*****************************/
+
+const TEST_DATA = {
+	yo: 'yo_from_data',
+	ye: { dot: { separated: 99999 } },
+	aa: ['a', 'b', 'c'],
+	bb: ['uno', 'dos']
+}
 
 const TEST_INPUT = `
 	<div>Hei</div>
 	<div>{{ yo }}</div>
-	<div>Hei</div>
+	{#
+		just a comment
+	#}
+	<div>{{ ye.dot.separated }}</div>
 
-	{% if %}
+	{% if non_existent %}
 		<div>IF</div>
 	{% else %}
 		<div>ELSE</div>
@@ -234,10 +250,9 @@ const TEST_INPUT = `
 	{% endfor %}`
 
 try {
-	console.log(JSON.stringify(analyze(TEST_INPUT), null, 2))
+	// console.log(JSON.stringify(scan(TEST_INPUT), null, 2))
+	// console.log(scan(TEST_INPUT));
+	console.log(parse(scan(TEST_INPUT), TEST_DATA));
 } catch(error) {
 	console.log('%c' + error.message, 'color: red')
 }
-
-/* interpreter that renders tokens in relation to the data object */
-function render(tokens, data) {}
