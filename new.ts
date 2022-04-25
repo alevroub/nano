@@ -31,25 +31,26 @@
  *		|		3 - TEXT    	<div>text</div>
  *
  **/
-function analyze(input: string): Tokens {
-	const RE_VARIABLE = /{{.*?}}/;
-	const RE_COMMENT = /{#.*?#}/;
-	const RE_BLOCK = /{%.*?%}/;
-	const RE_ALL = /({{.*?}}|{#.*?#}|{%.*?%})/;
 
-	const TOKEN_TYPES = [
-		'variable',
-		'comment',
-		'block',
-		'text'
-	];
+const RE_BLOCK =    	/{%.*?%}/;
+const RE_VARIABLE = 	/{{.*?}}/;
+const RE_COMMENT =  	/{#[^]*?#}/;
+const RE_ALL =      	/({%.*?%}|{{.*?}}|{#[^]*?#})/;
 
+const TOKEN_TYPES = [
+	'block',   	// 0
+	'variable',	// 1
+	'comment', 	// 2
+	'text'     	// 3
+];
+
+function scan(input: string): Tokens {
 	class Token {
 		constructor(type, value) {
 			this.type = type;
 			this.value = value;
 
-			if (type === 2) {
+			if (type === TOKEN_TYPES[0]) {
 				this.tokens = [];
 			}
 		}
@@ -62,18 +63,18 @@ function analyze(input: string): Tokens {
 	for (const lexeme of lexemes) {
 		const matches_block = RE_BLOCK.test(lexeme);
 		const token_type = return_token_type(lexeme);
+		const token_content = token_type !== TOKEN_TYPES[3] ? lexeme.slice(2, -2).trim() : lexeme;
 
-		if (token_type === 2) {
-			const statement = lexeme.slice(2, -2).trim();
-
-			if (statement.startsWith('end')) {
-				const end_statement_type = statement.slice(3); //endif -> if
+		if (token_type === TOKEN_TYPES[0]) {
+			if (token_content.startsWith('end')) {
+				const end_statement_type = token_content.slice(3); //endif -> if
 				let last_token = block_stack.pop();
 
 				if (last_token.value === 'else') {
 					/**
-					 * first push this token to the stack and pop the next one
-					 * which will have to be an if statement, otherwise a
+					 * if-else exception: first push the else-token to the stack
+					 * to keep its value and then skip to the next token (pop).
+					 * the next token has to be an if statement, otherwise a
 					 * statement mismatch will occur throwing a syntax error
 					 **/
 
@@ -91,10 +92,10 @@ function analyze(input: string): Tokens {
 
 				output_token(last_token);
 			} else {
-				block_stack.push(new Token(token_type, statement));
+				block_stack.push(new Token(token_type, token_content));
 			}
 		} else {
-			output_token(new Token(token_type, lexeme));
+			output_token(new Token(token_type, token_content));
 		}
 	}
 
@@ -111,14 +112,14 @@ function analyze(input: string): Tokens {
 	}
 
 	function return_token_type(lexeme) {
-		if (RE_VARIABLE.test(lexeme)) {
-			return 0;
+		if (RE_BLOCK.test(lexeme)) {
+			return TOKEN_TYPES[0];
+		} else if (RE_VARIABLE.test(lexeme)) {
+			return TOKEN_TYPES[1];
 		} else if (RE_COMMENT.test(lexeme)) {
-			return 1;
-		} else if (RE_BLOCK.test(lexeme)) {
-			return 2;
+			return TOKEN_TYPES[2];
 		} else {
-			return 3;
+			return TOKEN_TYPES[3];
 		}
 	}
 
