@@ -49,24 +49,24 @@ type Token = {
 	type: string;
 	value: string;
 	tokens?: Array<Token>;
-}
+};
 
 type Node = {
 	type: string;
 	value: string;
 	properties?: Record<string, any>;
-}
+};
 
-const RE_BLOCK =    	/{%.*?%}/;
-const RE_VARIABLE = 	/{{.*?}}/;
-const RE_COMMENT =  	/{#[^]*?#}/;
-const RE_ALL =      	/({%.*?%}|{{.*?}}|{#[^]*?#})/;
+const RE_BLOCK = /{%.*?%}/;
+const RE_VARIABLE = /{{.*?}}/;
+const RE_COMMENT = /{#[^]*?#}/;
+const RE_ALL = /({%.*?%}|{{.*?}}|{#[^]*?#})/;
 
 const TOKEN_TYPES = [
-	'block',   	// 0
-	'variable',	// 1
-	'comment', 	// 2
-	'text'     	// 3
+	'block', // 0
+	'variable', // 1
+	'comment', // 2
+	'text', // 3
 ];
 
 export function scan(input: string): Tokens {
@@ -83,7 +83,7 @@ export function scan(input: string): Tokens {
 
 	const tokens = [];
 	const block_stack = [];
-	const lexemes = input.split(RE_ALL);
+	const lexemes = input.split(RE_ALL).filter(v => v);
 
 	for (const lexeme of lexemes) {
 		const matches_block = RE_BLOCK.test(lexeme);
@@ -161,27 +161,44 @@ export function scan(input: string): Tokens {
  * 	care of syntax formatting and should provide all relevant properties
  * 	to the renderer.
  *
- * 	|	POSSIBLE? NODE TYPES
- * 	|		value_raw            	<div>hello</div>
- * 	|		value_literal        	"quoted"
- * 	|		value_variable	      	variable.dot.separated
- * 	|		value_filter         	variable | filter_name
- * 	|		value_truthy         	value
- * 	|		value_truthy_negated 	not value
- * 	|		expression_ternary   	variable ? 'value_if_true' : 'value_if_false'
- * 	|		expression_logical   	variable and
- * 	|		tag_escaped         		{{{ variable_escaped }}}
- * 	|		tag_literal         		{{ variable }}
- * 	|		block_for           		{% for num, index in numbers | unique %}
- * 	|		block_if            		{% if variable_1 and not variable_3 %}
- * 	|		block_else          		{% else %}
- * 	|		block_include       		{@ 'path/to/file.html' @}
- * 	|		block_comment       		{# commented #}
+ * 	|	NODE TYPES
+ * 	|		[x] text                      		"hello"
+ * 	|		[x] text_html                 		<div>hello</div>
+ * 	|		[x] tag_variable              		variable.dot.separated | variable['named-key']
+ * 	|		[x] tag_filter                		variable | filter_name
+ * 	|		[x] tag_conditional           		variable ? 'value_if_true' : 'value_if_false'
+ * 	|		[ ] block_for                 		{% for num, index in numbers | unique %}
+ * 	|		[ ] block_if                  		{% if variable_1 %}
+ * 	|		[ ] block_include             		{@ 'path/to/file.html' @}
+ * 	|		[ ] block_comment             		{# commented #}
+ * 	|		[ ] expression_logical_and    		and variable
+ * 	|		[ ] expression_logical_or     		or variable
+ * 	|		[ ] expression_binary         		is value
+ * 	|		[ ] expression_binary_negated 		is not value
  *
  **/
 
 export function parse(tokens) {
-	const nodes = [];
+	const NODE_TYPES = [
+		'text',
+		'tag_variable',
+		'tag_filter',
+		'tag_conditional',
+		'block_if',
+		'block_for',
+		'block_include',
+		'block_comment',
+	];
+
+	const RE_SEPARATOR_FILTER = / ?\| ?/;
+	const RE_SEPARATOR_DOT = /\./;
+	const RE_SEPARATOR_TERNARY = /[?:]/;
+	const RE_SEPARATOR_BRACES = /\[["']|['"]\]/;
+
+	const RE_VARIABLE_EXPRESSION_LIKE = /[\&\|\<\>\+\-\=\!\{\}\,]/;
+	const RE_VARIABLE_QUOTED = /['"].+?['"]/;
+	const RE_VARIABLE_DIGIT = /^-?(\d|\.\d)+$/;
+	const RE_VARIABLE_INVALID = /[- ]/;
 
 	class Node {
 		constructor(type, value, properties) {
@@ -194,13 +211,65 @@ export function parse(tokens) {
 		}
 	}
 
+	const nodes = [];
+
 	function parse_variable(token) {
-		/* variable, variable dot, variable filter */
-		return {};
+		if (RE_VARIABLE_EXPRESSION_LIKE.test(token)) {
+			throw new NanoError('Variable expressions not allowed (yet)')
+		}
+
+		if (token.value.includes('?')) {
+			const statement_parts = token.value.split(RE_SEPARATOR_TERNARY).map(v => v.trim());
+			const statement_nodes = [];
+
+			if (statement_parts.length !== 3) {
+				throw new NanoError('Invalid ternary expression');
+			}
+
+			for (const variable of statement_parts) {
+				statement_nodes.push(return_tag_type_node(variable))
+			}
+
+			return new Node(NODE_TYPES[3], statement_nodes);
+		} else if (token.value.includes('|')) {
+			const statement_parts = token.value.split(RE_SEPARATOR_FILTER).map(v => v.trim());
+			const variable = statement_parts.shift();
+			const filters = statement_parts.filter(v => v);
+
+			if (filters.length === 0) {
+				throw new NanoError('Invalid filter syntax');
+			}
+
+			return new Node(NODE_TYPES[2], return_tag_type_node(variable), { filters });
+		} else if (token.value.includes('[')) {
+			const statement_parts = token.value.split(RE_SEPARATOR_BRACES);
+			const variable = statement_parts.shift();
+			const variables_nested = statement_parts.filter(v => v);
+
+			return new Node(NODE_TYPES[1], [ensure_valid_name(variable), ...variables_nested]);
+		} else {
+			return return_tag_type_node(token.value)
+		}
+
+		function return_tag_type_node(variable) {
+			if (RE_VARIABLE_QUOTED.test(variable)) {
+				return new Node(NODE_TYPES[0], variable.slice(1, -1));
+			} else {
+				return new Node(NODE_TYPES[1], ensure_valid_name(variable).split(RE_SEPARATOR_DOT));
+			}
+		}
+
+		function ensure_valid_name(variable) {
+			if (RE_VARIABLE_INVALID.test(variable)) {
+				throw new NanoError(`Invalid variable name: "${variable}"`)
+			}
+
+			return variable;
+		}
 	}
 
 	function parse_comment(token) {
-		return new Node("block_comment", token.value);
+		return new Node('block_comment', token.value);
 	}
 
 	function parse_block(token) {
@@ -208,23 +277,23 @@ export function parse(tokens) {
 	}
 
 	function parse_text(token) {
-		return new Node("value_raw", token.value);
+		return new Node("text_html", token.value);
 	}
 
 	for (const token of tokens) {
-		switch(token.type) {
+		switch (token.type) {
 			case TOKEN_TYPES[0]:
 				nodes.push(parse_block(token));
-			break;
+				break;
 			case TOKEN_TYPES[1]:
 				nodes.push(parse_variable(token));
-			break;
+				break;
 			case TOKEN_TYPES[2]:
 				nodes.push(parse_comment(token));
-			break;
+				break;
 			case TOKEN_TYPES[3]:
 				nodes.push(parse_text(token));
-			break;
+				break;
 		}
 	}
 
@@ -243,6 +312,4 @@ export function parse(tokens) {
  *
  * */
 
-export function compile(nodes, data) {
-
-}
+export function compile(nodes, data) {}
