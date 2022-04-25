@@ -45,7 +45,7 @@ type Token = {
 type Node = {
 	type: string;
 	value: string;
-	properties: Record<string, any>;
+	properties?: Record<string, any>;
 }
 
 const RE_BLOCK =    	/{%.*?%}/;
@@ -186,6 +186,7 @@ export function parse(tokens) {
 	}
 
 	function parse_variable(token) {
+		/* variable, variable dot, variable filter */
 		return {};
 	}
 
@@ -228,6 +229,8 @@ export function parse(tokens) {
  *
  * 	interpreter that finally renders the nodes in relation
  * 	to the data object
+ *
+ * 	@@TODO: turn into async function
  *
  * */
 
