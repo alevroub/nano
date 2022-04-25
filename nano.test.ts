@@ -7,25 +7,33 @@ const TEST_DATA = {
 	bb: ['uno', 'dos']
 }
 
-const TEST_INPUT = `
-	<div>Hei</div>
-	<div>{{ yo }}</div>
-	{#
-		just a comment
-	#}
-	<div>{{ ye.dot.separated }}</div>
+const TEST_INPUT = [
+	'{{ var["br acket  "]["nes ted"] }}',
+	'{{ v.dot }}',
+].join('')
 
-	{% if non_existent %}
-		<div>IF</div>
-	{% else %}
-		<div>ELSE</div>
-	{% endif %}
 
-	{% for a in AA %}
-		{% for b in BB %}
-			<div>{{ inside_b }}</div>
-		{% endfor %}
-	{% endfor %}`
+// const TEST_INPUT = [
+// 	'<div>Hei</div>',
+// 	'<div>{{ 100 }}</div>',
+// 	'<div>{{ "Literally" }}</div>',
+// 	'{#',
+// 		'just a comment',
+// 	'#}',
+// 	'<div>{{ dot.separated }}</div>',
+
+// 	'{% if non_existent %}',
+// 		'<div>IF</div>',
+// 	'{% else %}',
+// 		'<div>ELSE</div>',
+// 	'{% endif %}',
+
+// 	'{% for a in AA %}',
+// 		'{% for b in BB %}',
+// 			'<div>{{ inside_b }}</div>',
+// 		'{% endfor %}',
+// 	'{% endfor %}',
+// ].join('')
 
 try {
 	// console.log(JSON.stringify(scan(TEST_INPUT), null, 2))
