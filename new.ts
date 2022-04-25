@@ -15,47 +15,20 @@
 
 /**
  *
- *	1. analyze
+ *	1. SCAN
  * 	input -> lexemes -> tokens
  *
- * 	TOKEN TYPES
- * 		0 - VARIABLE 		{{ variable }}
- * 		1 - COMMENT 		{# comment #}
- * 		2 - BLOCK 			{% if/else/for %}
- * 		3 - TEXT				<div>text</div>
- *
- * 2. parse
- * 	tokens -> nodes
- *
- * 	NODE TYPES
- * 		value_raw					<div>hello</div>
- * 		value_literal				"quoted"
- * 		value_variable				variable.dot.separated
- * 		value_filter				variable | filter_name
- * 		value_truthy				value
- * 		value_truthy_negated		not value
- * 		expression_ternary		variable ? 'value_if_true' : 'value_if_false'
- * 		expression_logical		variable and
- * 		tag_escaped					{{{ variable_escaped }}}
- * 		tag_literal					{{ variable }}
- * 		block_for					{% for num, index in numbers | unique %}
- * 		block_if						{% if variable_1 and not variable_3 %}
- * 		block_else					{% else %}
- * 		block_include				{@ 'path/to/file.html' @}
- * 		block_comment				{# commented #}
- *
- * 3. render (interpreter)
- * 	nodes -> output
- *
- **/
-
-/**
- *
- * 1. lexer that splits the string input into lexemes and returns
- * 	tokens. the goal in this step is to make sure the *structure* of
+ * 	lexer that splits the string input into lexemes and returns
+ * 	tokens. the goal in this step is to make sure the structure of
  * 	all blocks are valid, e.g. check for missing or duplicate tags.
  * 	invalid block statements or syntax errors are checked in the next
  * 	step when the tokens are used to create nodes.
+ *
+ *		|	TOKEN TYPES
+ *		|		0 - BLOCK   	{% if/else/for %}
+ *		|		1 - VARIABLE	{{ variable }}
+ *		|		2 - COMMENT 	{# comment #}
+ *		|		3 - TEXT    	<div>text</div>
  *
  **/
 function analyze(input: string): Tokens {
@@ -154,16 +127,47 @@ function analyze(input: string): Tokens {
 
 /**
  *
- * 2.	parser that takes the initial tree of tokens and builds a tree of
+ * 2. PARSE
+ * 	tokens -> nodes
+ *
+ * 	parser that takes the initial tree of tokens and builds a tree of
  * 	nodes with more information about each token match. this step takes
  * 	care of syntax formatting and should provide all relevant properties
  * 	to the renderer.
+ *
+ * 	|	POSSIBLE? NODE TYPES
+ * 	|		value_raw            	<div>hello</div>
+ * 	|		value_literal        	"quoted"
+ * 	|		value_variable	      	variable.dot.separated
+ * 	|		value_filter         	variable | filter_name
+ * 	|		value_truthy         	value
+ * 	|		value_truthy_negated 	not value
+ * 	|		expression_ternary   	variable ? 'value_if_true' : 'value_if_false'
+ * 	|		expression_logical   	variable and
+ * 	|		tag_escaped         		{{{ variable_escaped }}}
+ * 	|		tag_literal         		{{ variable }}
+ * 	|		block_for           		{% for num, index in numbers | unique %}
+ * 	|		block_if            		{% if variable_1 and not variable_3 %}
+ * 	|		block_else          		{% else %}
+ * 	|		block_include       		{@ 'path/to/file.html' @}
+ * 	|		block_comment       		{# commented #}
  *
  **/
 
 function parse() {
 
 }
+
+/**
+ *
+ *	2. COMPILE
+ * 	nodes -> output
+ *
+ * 	interpreter that finally renders the nodes in relation
+ * 	to the data object
+ *
+ * */
+
 
 const TEST_INPUT = `
 	<div>Hei</div>
