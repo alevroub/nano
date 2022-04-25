@@ -42,6 +42,12 @@ type Token = {
 	tokens?: Array<Token>;
 }
 
+type Node = {
+	type: string;
+	value: string;
+	properties: Record<string, any>;
+}
+
 const RE_BLOCK =    	/{%.*?%}/;
 const RE_VARIABLE = 	/{{.*?}}/;
 const RE_COMMENT =  	/{#[^]*?#}/;
@@ -54,7 +60,7 @@ const TOKEN_TYPES = [
 	'text'     	// 3
 ];
 
-function scan(input: string): Tokens {
+export function scan(input: string): Tokens {
 	class Token {
 		constructor(type, value) {
 			this.type = type;
@@ -165,7 +171,7 @@ function scan(input: string): Tokens {
  *
  **/
 
-function parse(tokens) {
+export function parse(tokens) {
 	const nodes = [];
 
 	class Node {
@@ -225,44 +231,6 @@ function parse(tokens) {
  *
  * */
 
-function render(nodes, data) {
+export function compile(nodes, data) {
 
-}
-
-
-/*****************************/
-
-const TEST_DATA = {
-	yo: 'yo_from_data',
-	ye: { dot: { separated: 99999 } },
-	aa: ['a', 'b', 'c'],
-	bb: ['uno', 'dos']
-}
-
-const TEST_INPUT = `
-	<div>Hei</div>
-	<div>{{ yo }}</div>
-	{#
-		just a comment
-	#}
-	<div>{{ ye.dot.separated }}</div>
-
-	{% if non_existent %}
-		<div>IF</div>
-	{% else %}
-		<div>ELSE</div>
-	{% endif %}
-
-	{% for a in AA %}
-		{% for b in BB %}
-			<div>{{ inside_b }}</div>
-		{% endfor %}
-	{% endfor %}`
-
-try {
-	// console.log(JSON.stringify(scan(TEST_INPUT), null, 2))
-	// console.log(scan(TEST_INPUT));
-	console.log(parse(scan(TEST_INPUT), TEST_DATA));
-} catch(error) {
-	console.log('%c' + error.message, 'color: red')
 }
