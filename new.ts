@@ -155,8 +155,54 @@ function scan(input: string): Tokens {
  *
  **/
 
-function parse() {
+function parse(tokens) {
+	const nodes = [];
 
+	class Node {
+		constructor(type, value, properties) {
+			this.type = type;
+			this.value = value;
+
+			if (properties) {
+				this.properties = properties;
+			}
+		}
+	}
+
+	function parse_variable(token) {
+		return {};
+	}
+
+	function parse_comment(token) {
+		return new Node("block_comment", token.value);
+	}
+
+	function parse_block(token) {
+		return {};
+	}
+
+	function parse_text(token) {
+		return new Node("value_raw", token.value);
+	}
+
+	for (const token of tokens) {
+		switch(token.type) {
+			case TOKEN_TYPES[0]:
+				nodes.push(parse_block(token));
+			break;
+			case TOKEN_TYPES[1]:
+				nodes.push(parse_variable(token));
+			break;
+			case TOKEN_TYPES[2]:
+				nodes.push(parse_comment(token));
+			break;
+			case TOKEN_TYPES[3]:
+				nodes.push(parse_text(token));
+			break;
+		}
+	}
+
+	return nodes;
 }
 
 /**
