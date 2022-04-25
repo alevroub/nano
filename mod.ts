@@ -1,6 +1,15 @@
 // Copyright (c) 2022 Alejandro V. Rojas. All rights reserved. MIT license.
 
 /**
+ *
+ * 	>> SOON
+ * 		[ ] include block
+ * 		[ ] object['quoted-prop']
+ * 		[ ] basic expressions: && || == != >, >=, <, <=
+ *
+ * */
+
+/**
  * v0.0.1
  *
  * Nano template engine – a very simple semi logic-less template engine.
