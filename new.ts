@@ -32,6 +32,16 @@
  *
  **/
 
+class NanoError extends Error {
+	public name = 'NanoSyntaxError';
+}
+
+type Token = {
+	type: string;
+	value: string;
+	tokens?: Array<Token>;
+}
+
 const RE_BLOCK =    	/{%.*?%}/;
 const RE_VARIABLE = 	/{{.*?}}/;
 const RE_COMMENT =  	/{#[^]*?#}/;
