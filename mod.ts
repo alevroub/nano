@@ -3,7 +3,7 @@
 /**
  *
  * 	>> SOON
- * 		[ ] include block
+ * 		[ ] {@ include @}
  * 		[ ] basic expressions: && || == != >, >=, <, <=
  *
  * */
