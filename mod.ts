@@ -161,15 +161,15 @@ export function scan(input: string): Tokens {
  * 	to the renderer.
  *
  * 	|	NODE TYPES
- * 	|		[x] text                      		"hello"
- * 	|		[x] text_html                 		<div>hello</div>
- * 	|		[x] tag_variable              		variable.dot.separated | variable['named-key']
- * 	|		[x] tag_filter                		variable | filter_name
- * 	|		[x] tag_conditional           		variable ? 'value_if_true' : 'value_if_false'
- * 	|		[ ] block_for                 		{% for num, index in numbers | unique %}
- * 	|		[ ] block_if                  		{% if variable_1 %}
- * 	|		[ ] block_include             		{@ 'path/to/file.html' @}
+ * 	|		[x] value_text                		<div>hello</div>
+ * 	|		[x] value_identifier          		variable.dot.separated *OR* variable['named-key']
+ * 	|		[x] expression_value          		{{ variable.dot.separated }} *OR* {{ variable['named-key'] }}
+ * 	|		[x] expression_filter         		{{ variable | filter_name }}
+ * 	|		[x] expression_conditional    		{{ variable ? 'value_if_true' : 'value_if_false' }}
  * 	|		[ ] block_comment             		{# commented #}
+ * 	|		[ ] block_if                  		{% if variable_1 %}
+ * 	|		[ ] block_for                 		{% for (num, index) in numbers | unique %}
+ * 	|		[ ] block_include             		{@ 'path/to/file.html' @}
  * 	|		[ ] expression_logical_and    		and variable
  * 	|		[ ] expression_logical_or     		or variable
  * 	|		[ ] expression_binary         		is value
@@ -179,27 +179,16 @@ export function scan(input: string): Tokens {
 
 export function parse(tokens) {
 	const NODE_TYPES = [
-		'text',
-		'tag_variable',
-		'tag_filter',
-		'tag_conditional',
+		'value_text',
+		'value_variable',
+		'expression_value',
+		'expression_filter',
+		'expression_conditional',
+		'block_comment',
 		'block_if',
 		'block_for',
 		'block_include',
-		'block_comment',
 	];
-
-	const RE_SEPARATOR_FILTER = / ?\| ?/;
-	const RE_SEPARATOR_DOT = /\./;
-	const RE_SEPARATOR_TERNARY = /[?:]/;
-	const RE_SEPARATOR_BRACES = /\[["']|['"]\]/;
-
-	const RE_VARIABLE_EXPRESSION_LIKE = /[\&\|\<\>\+\-\=\!\{\}\,]/;
-	const RE_VARIABLE_QUOTED = /^['"].+?['"]$/;
-	const RE_VARIABLE_NAMED_KEY = /\[['"]/;
-	const RE_VARIABLE_DIGIT = /^-?(\d|\.\d)+$/;
-	const RE_VARIABLE_VALID = /^[^0-9][0-9a-zA-Z]*$/;
-	const RE_METHOD_INVALID = /[\- ]/;
 
 	class Node {
 		constructor(type, value, properties) {
