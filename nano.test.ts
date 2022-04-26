@@ -8,8 +8,7 @@ const TEST_DATA = {
 }
 
 const TEST_INPUT = [
-	'{{ var["br acket  "]["nes ted"] }}',
-	'{{ v.dot }}',
+	'{{ dev ? AAA : "BBB" }}',
 ].join('')
 
 
