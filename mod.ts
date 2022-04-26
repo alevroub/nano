@@ -4,7 +4,6 @@
  *
  * 	>> SOON
  * 		[ ] include block
- * 		[ ] object['quoted-prop']
  * 		[ ] basic expressions: && || == != >, >=, <, <=
  *
  * */
