@@ -328,7 +328,7 @@ export function parse(tokens) {
 	}
 
 	function parse_comment(token) {
-		return new Node('block_comment', token.value);
+		return new Node(NODE_TYPES[5], token.value);
 	}
 
 	function parse_text(token) {
