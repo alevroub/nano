@@ -58,7 +58,7 @@ type Node = {
 };
 
 const RE_BLOCK = /^{%.*?%}$/;
-const RE_VARIABLE = /^{{.*?}}$/;
+const RE_TAG = /^{{.*?}}$/;
 const RE_COMMENT = /^{#[^]*?#}$/;
 const RE_ALL = /({%.*?%}|{{.*?}}|{#[^]*?#})/;
 
@@ -69,18 +69,18 @@ const TOKEN_TYPES = [
 	'text',
 ];
 
-export function scan(input: string): Tokens {
-	class Token {
-		constructor(type, value) {
-			this.type = type;
-			this.value = value;
+class Token {
+	constructor(type, value) {
+		this.type = type;
+		this.value = value;
 
-			if (type === TOKEN_TYPES[0]) {
-				this.tokens = [];
-			}
+		if (type === TOKEN_TYPES[0]) {
+			this.tokens = [];
 		}
 	}
+}
 
+export function scan(input: string): Tokens {
 	const tokens = [];
 	const block_stack = [];
 	const lexemes = input.split(RE_ALL).filter(v => v);
@@ -107,11 +107,11 @@ export function scan(input: string): Tokens {
 				}
 
 				if (!last_token) {
-					throw new Error('Syntax error: too many closing tags');
+					throw new NanoError('Too many closing tags');
 				}
 
 				if (!last_token.value.startsWith(end_statement_type)) {
-					throw new Error('Syntax error: invalid closing tag');
+					throw new NanoError('Invalid closing tag');
 				}
 
 				output_token(last_token);
@@ -124,7 +124,7 @@ export function scan(input: string): Tokens {
 	}
 
 	if (block_stack.length > 0) {
-		throw new Error('Syntax error: missing closing tag');
+		throw new NanoError('Missing closing tag');
 	}
 
 	function output_token(token) {
@@ -138,7 +138,7 @@ export function scan(input: string): Tokens {
 	function return_token_type(lexeme) {
 		if (RE_BLOCK.test(lexeme)) {
 			return TOKEN_TYPES[0];
-		} else if (RE_VARIABLE.test(lexeme)) {
+		} else if (RE_TAG.test(lexeme)) {
 			return TOKEN_TYPES[1];
 		} else if (RE_COMMENT.test(lexeme)) {
 			return TOKEN_TYPES[2];
