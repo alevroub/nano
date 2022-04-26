@@ -56,16 +56,16 @@ type Node = {
 	properties?: Record<string, any>;
 };
 
-const RE_BLOCK = /{%.*?%}/;
-const RE_VARIABLE = /{{.*?}}/;
-const RE_COMMENT = /{#[^]*?#}/;
+const RE_BLOCK = /^{%.*?%}$/;
+const RE_VARIABLE = /^{{.*?}}$/;
+const RE_COMMENT = /^{#[^]*?#}$/;
 const RE_ALL = /({%.*?%}|{{.*?}}|{#[^]*?#})/;
 
 const TOKEN_TYPES = [
-	'block', // 0
-	'variable', // 1
-	'comment', // 2
-	'text', // 3
+	'block',
+	'tag',
+	'comment',
+	'text',
 ];
 
 export function scan(input: string): Tokens {
@@ -85,7 +85,6 @@ export function scan(input: string): Tokens {
 	const lexemes = input.split(RE_ALL).filter(v => v);
 
 	for (const lexeme of lexemes) {
-		const matches_block = RE_BLOCK.test(lexeme);
 		const token_type = return_token_type(lexeme);
 		const token_content = token_type !== TOKEN_TYPES[3] ? lexeme.slice(2, -2).trim() : lexeme;
 
