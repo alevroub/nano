@@ -196,9 +196,11 @@ export function parse(tokens) {
 	const RE_SEPARATOR_BRACES = /\[["']|['"]\]/;
 
 	const RE_VARIABLE_EXPRESSION_LIKE = /[\&\|\<\>\+\-\=\!\{\}\,]/;
-	const RE_VARIABLE_QUOTED = /['"].+?['"]/;
+	const RE_VARIABLE_QUOTED = /^['"].+?['"]$/;
+	const RE_VARIABLE_NAMED_KEY = /\[['"]/;
 	const RE_VARIABLE_DIGIT = /^-?(\d|\.\d)+$/;
-	const RE_VARIABLE_INVALID = /[- ]/;
+	const RE_VARIABLE_VALID = /^[^0-9][0-9a-zA-Z]*$/;
+	const RE_METHOD_INVALID = /[\- ]/;
 
 	class Node {
 		constructor(type, value, properties) {
@@ -213,12 +215,14 @@ export function parse(tokens) {
 
 	const nodes = [];
 
-	function parse_variable(token) {
-		if (RE_VARIABLE_EXPRESSION_LIKE.test(token)) {
-			throw new NanoError('Variable expressions not allowed (yet)')
-		}
+	function parse_tag(token) {
+		// if (RE_VARIABLE_EXPRESSION_LIKE.test(token)) {
+		// 	throw new NanoError('Variable expressions not allowed (yet)')
+		// }
 
 		if (token.value.includes('?')) {
+			/* tag_conditional */
+
 			const statement_parts = token.value.split(RE_SEPARATOR_TERNARY).map(v => v.trim());
 			const statement_nodes = [];
 
@@ -226,12 +230,14 @@ export function parse(tokens) {
 				throw new NanoError('Invalid ternary expression');
 			}
 
-			for (const variable of statement_parts) {
-				statement_nodes.push(return_tag_type_node(variable))
+			for (const part of statement_parts) {
+				statement_nodes.push(return_tag_value(part))
 			}
 
 			return new Node(NODE_TYPES[3], statement_nodes);
 		} else if (token.value.includes('|')) {
+			/* tag_filter */
+
 			const statement_parts = token.value.split(RE_SEPARATOR_FILTER).map(v => v.trim());
 			const variable = statement_parts.shift();
 			const filters = statement_parts.filter(v => v);
@@ -240,28 +246,62 @@ export function parse(tokens) {
 				throw new NanoError('Invalid filter syntax');
 			}
 
-			return new Node(NODE_TYPES[2], return_tag_type_node(variable), { filters });
-		} else if (token.value.includes('[')) {
-			const statement_parts = token.value.split(RE_SEPARATOR_BRACES);
-			const variable = statement_parts.shift();
-			const variables_nested = statement_parts.filter(v => v);
-
-			return new Node(NODE_TYPES[1], [ensure_valid_name(variable), ...variables_nested]);
-		} else {
-			return return_tag_type_node(token.value)
-		}
-
-		function return_tag_type_node(variable) {
-			if (RE_VARIABLE_QUOTED.test(variable)) {
-				return new Node(NODE_TYPES[0], variable.slice(1, -1));
-			} else {
-				return new Node(NODE_TYPES[1], ensure_valid_name(variable).split(RE_SEPARATOR_DOT));
+			for (const filter of filters) {
+				if (RE_METHOD_INVALID.test(filter)) {
+					throw new NanoError(`Invalid filter name: ${filter}`);
+				}
 			}
+
+			return new Node(NODE_TYPES[2], return_tag_value(variable), { filters });
+		} else {
+			/* tag_variable */
+			return new Node(NODE_TYPES[1], return_tag_value(token.value));
 		}
 
-		function ensure_valid_name(variable) {
-			if (RE_VARIABLE_INVALID.test(variable)) {
-				throw new NanoError(`Invalid variable name: "${variable}"`)
+		// if (token.value.includes('[')) {
+		// 	const statement_parts = token.value.split(RE_SEPARATOR_BRACES);
+		// 	const variable = statement_parts.shift();
+		// 	const variables_nested = statement_parts.filter(v => v);
+
+		// 	console.log(variable)
+
+		// 	return new Node(NODE_TYPES[1], [ensure_valid_identifier(variable), ...variables_nested]);
+		// } else {
+		// 	return return_tag_value(token.value)
+		// }
+
+		function return_tag_value(variable) {
+			if (RE_VARIABLE_QUOTED.test(variable)) {
+				/* "quoted variable" */
+				const variable_unquoted = variable.slice(1, -1);
+				return new Node("value_text", variable_unquoted);
+			}
+
+			if (RE_VARIABLE_NAMED_KEY.test(variable)) {
+				if (RE_SEPARATOR_DOT.test(variable) && RE_SEPARATOR_BRACES.test(variable)) {
+					throw new NanoError('Avoid mixing variable access')
+				}
+
+				const variable_parts = variable.split(RE_SEPARATOR_BRACES);
+				const variable_first = variable_parts.shift();
+				const variables_nested = variable_parts.filter(v => v);
+
+				return new Node("value_variable", [ensure_valid_identifier(variable_first), ...variables_nested]);
+			}
+
+			/* regular variable name, force dot separation */
+			const variable_parts = variable.split(RE_SEPARATOR_DOT);
+
+			for (const part of variable_parts) {
+				ensure_valid_identifier(part, variable);
+			}
+
+			return new Node("value_variable", variable_parts);
+		}
+
+		function ensure_valid_identifier(variable, context) {
+			if (!RE_VARIABLE_VALID.test(variable)) {
+				throw new NanoError(`Invalid variable name: "${context || variable}"`)
 			}
 
 			return variable;
@@ -277,7 +317,7 @@ export function parse(tokens) {
 	}
 
 	function parse_text(token) {
-		return new Node("text_html", token.value);
+		return new Node("value_html", token.value);
 	}
 
 	for (const token of tokens) {
@@ -286,7 +326,7 @@ export function parse(tokens) {
 				nodes.push(parse_block(token));
 				break;
 			case TOKEN_TYPES[1]:
-				nodes.push(parse_variable(token));
+				nodes.push(parse_tag(token));
 				break;
 			case TOKEN_TYPES[2]:
 				nodes.push(parse_comment(token));
