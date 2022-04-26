@@ -203,29 +203,77 @@ export function parse(tokens) {
 
 	const nodes = [];
 
-	function parse_tag(token) {
-		// if (RE_VARIABLE_EXPRESSION_LIKE.test(token)) {
-		// 	throw new NanoError('Variable expressions not allowed (yet)')
-		// }
+	function parse_expression(token) {
+		const RE_SEPARATOR_FILTER = / ?\| ?/;
+		const RE_SEPARATOR_DOT = /\./;
+		const RE_SEPARATOR_TERNARY = /[?:]/;
+		const RE_SEPARATOR_BRACES = /\[["']|['"]\]/;
+
+		const RE_VARIABLE_EXPRESSION_LIKE = /[\&\|\<\>\+\-\=\!\{\}\,]/;
+		const RE_VARIABLE_QUOTED = /^['"].+?['"]$/;
+		const RE_VARIABLE_NAMED_KEY = /\[['"]/;
+		const RE_VARIABLE_DIGIT = /^-?(\d|\.\d)+$/;
+		const RE_VARIABLE_VALID = /^[^0-9][0-9a-zA-Z]*$/;
+		const RE_METHOD_INVALID = /[\- ]/;
+
+		function parse_value(variable) {
+			if (RE_VARIABLE_QUOTED.test(variable)) {
+				const variable_unquoted = variable.slice(1, -1);
+				return new Node(NODE_TYPES[0], variable_unquoted);
+			}
+
+			if (RE_VARIABLE_NAMED_KEY.test(variable)) {
+				if (RE_SEPARATOR_DOT.test(variable) && RE_SEPARATOR_BRACES.test(variable)) {
+					throw new NanoError('Avoid combined object access notation')
+				}
+
+				/**
+				 * variable_root["nested"]["variables"]
+				 *
+				 * nested variables are parsed as strings by default and
+				 * therefore don't have to be checked as valid identifiers
+				*/
+
+				const variable_parts = variable.split(RE_SEPARATOR_BRACES);
+				const variable_root = variable_parts.shift();
+				const variables_nested = variable_parts.filter(v => v);
+
+				return new Node(NODE_TYPES[1], [ensure_valid_identifier(variable_root), ...variables_nested]);
+			}
+
+			const variable_parts = variable.split(RE_SEPARATOR_DOT);
+
+			for (const part of variable_parts) {
+				ensure_valid_identifier(part, variable);
+			}
+
+			return new Node(NODE_TYPES[1], variable_parts);
+		}
+
+		function ensure_valid_identifier(variable, context) {
+			if (!RE_VARIABLE_VALID.test(variable)) {
+				throw new NanoError(`Invalid variable name: "${context || variable}"`)
+			}
+
+			return variable;
+		}
 
 		if (token.value.includes('?')) {
-			/* tag_conditional */
-
 			const statement_parts = token.value.split(RE_SEPARATOR_TERNARY).map(v => v.trim());
 			const statement_nodes = [];
 
 			if (statement_parts.length !== 3) {
-				throw new NanoError('Invalid ternary expression');
+				throw new NanoError('Invalid conditional expression');
 			}
 
 			for (const part of statement_parts) {
-				statement_nodes.push(return_tag_value(part))
+				statement_nodes.push(parse_value(part))
 			}
 
-			return new Node(NODE_TYPES[3], statement_nodes);
-		} else if (token.value.includes('|')) {
-			/* tag_filter */
+			return new Node(NODE_TYPES[4], statement_nodes);
+		}
 
+		if (token.value.includes('|')) {
 			const statement_parts = token.value.split(RE_SEPARATOR_FILTER).map(v => v.trim());
 			const variable = statement_parts.shift();
 			const filters = statement_parts.filter(v => v);
@@ -240,59 +288,42 @@ export function parse(tokens) {
 				}
 			}
 
-			return new Node(NODE_TYPES[2], return_tag_value(variable), { filters });
-		} else {
-			/* tag_variable */
-			return new Node(NODE_TYPES[1], return_tag_value(token.value));
+			return new Node(NODE_TYPES[3], parse_value(variable), { filters });
 		}
 
-		// if (token.value.includes('[')) {
-		// 	const statement_parts = token.value.split(RE_SEPARATOR_BRACES);
-		// 	const variable = statement_parts.shift();
-		// 	const variables_nested = statement_parts.filter(v => v);
+		return new Node(NODE_TYPES[2], parse_value(token.value));
+	}
 
-		// 	console.log(variable)
 
-		// 	return new Node(NODE_TYPES[1], [ensure_valid_identifier(variable), ...variables_nested]);
-		// } else {
-		// 	return return_tag_value(token.value)
-		// }
+	function parse_block(token) {
+		const RE_IF_SEPARATOR = /^if/
+		const RE_FOR_SEPARATOR = /^(for)|(in)/
 
-		function return_tag_value(variable) {
-			if (RE_VARIABLE_QUOTED.test(variable)) {
-				/* "quoted variable" */
-				const variable_unquoted = variable.slice(1, -1);
-				return new Node("value_text", variable_unquoted);
+		if (token.value.startsWith('if')) {
+			const statement_parts = token.value.split(RE_IF_SEPARATOR);
+			const statement = statement_parts.shift();
+			const condition = statement_parts.filter(v => v).shift();
+			const else_condition = token.tokens.find(t => t.value === 'else');
+
+			if (!condition) {
+				throw new NanoError('Missing condition in if statement')
 			}
 
-			if (RE_VARIABLE_NAMED_KEY.test(variable)) {
-				if (RE_SEPARATOR_DOT.test(variable) && RE_SEPARATOR_BRACES.test(variable)) {
-					throw new NanoError('Avoid mixing variable access')
-				}
+			const block_tokens = token.tokens.filter(t => t.value !== 'else');
+			const block_properties = {
+				condition: parse_expression(new Token(TOKEN_TYPES[1], condition))
+			};
 
-				const variable_parts = variable.split(RE_SEPARATOR_BRACES);
-				const variable_first = variable_parts.shift();
-				const variables_nested = variable_parts.filter(v => v);
-
-				return new Node("value_variable", [ensure_valid_identifier(variable_first), ...variables_nested]);
+			if (else_condition) {
+				block_properties.else = parse_expression(else_condition)
 			}
 
-			/* regular variable name, force dot separation */
-			const variable_parts = variable.split(RE_SEPARATOR_DOT);
-
-			for (const part of variable_parts) {
-				ensure_valid_identifier(part, variable);
-			}
-
-			return new Node("value_variable", variable_parts);
+			return new Node('block_if', parse(block_tokens), block_properties);
 		}
 
-		function ensure_valid_identifier(variable, context) {
-			if (!RE_VARIABLE_VALID.test(variable)) {
-				throw new NanoError(`Invalid variable name: "${context || variable}"`)
-			}
-
-			return variable;
+		if (token.value.startsWith('for')) {
+			const statement_parts = token.value.split(' ');
+			return new Node('block', token.value);
 		}
 	}
 
@@ -300,12 +331,8 @@ export function parse(tokens) {
 		return new Node('block_comment', token.value);
 	}
 
-	function parse_block(token) {
-		return {};
-	}
-
 	function parse_text(token) {
-		return new Node("value_html", token.value);
+		return new Node(NODE_TYPES[0], token.value);
 	}
 
 	for (const token of tokens) {
@@ -314,7 +341,7 @@ export function parse(tokens) {
 				nodes.push(parse_block(token));
 				break;
 			case TOKEN_TYPES[1]:
-				nodes.push(parse_tag(token));
+				nodes.push(parse_expression(token));
 				break;
 			case TOKEN_TYPES[2]:
 				nodes.push(parse_comment(token));
