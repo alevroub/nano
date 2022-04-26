@@ -8,7 +8,11 @@ const TEST_DATA = {
 }
 
 const TEST_INPUT = [
-	'{{ dev ? AAA : "BBB" }}',
+	'{% if a %}',
+	'"AAA"',
+	'{% else %}',
+	'{{ BBB }}',
+	'{% endif %}',
 ].join('')
 
 
@@ -35,9 +39,9 @@ const TEST_INPUT = [
 // ].join('')
 
 try {
-	// console.log(JSON.stringify(scan(TEST_INPUT), null, 2))
 	// console.log(scan(TEST_INPUT));
 	console.log(parse(scan(TEST_INPUT), TEST_DATA));
+	// console.log(JSON.stringify(parse(scan(TEST_INPUT)), null, 2))
 } catch(error) {
 	console.log('%c' + error.message, 'color: red')
 }
