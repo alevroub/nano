@@ -399,10 +399,6 @@ export function parse(marks) {
 		return new Node(NODE_TYPES[7], mark.value);
 	}
 
-	function parse_tag_mark(mark) {
-		return parse_expression(mark.value);
-	}
-
 	function parse_block_mark(mark) {
 		if (mark.value.startsWith('if ')) {
 			return parse_block_if_mark(mark);
@@ -413,6 +409,10 @@ export function parse(marks) {
 		}
 
 		throw new NanoError('Invalid block statement');
+	}
+
+	function parse_tag_mark(mark) {
+		return parse_expression(mark.value);
 	}
 
 	function parse_comment_mark(mark) {
