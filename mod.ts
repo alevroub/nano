@@ -61,11 +61,6 @@ class NanoError extends Error {
 // 	operator: string;
 // }
 
-const RE_BLOCK = /^{%.*?%}$/;
-const RE_TAG = /^{{.*?}}$/;
-const RE_COMMENT = /^{#[^]*?#}$/;
-const RE_ALL = /({%.*?%}|{{.*?}}|{#[^]*?#})/;
-
 const MARK_TYPES = [
 	'block',
 	'tag',
@@ -85,6 +80,11 @@ class Mark {
 }
 
 export function scan(input: string): Marks {
+	const RE_BLOCK = /^{%.*?%}$/;
+	const RE_TAG = /^{{.*?}}$/;
+	const RE_COMMENT = /^{#[^]*?#}$/;
+	const RE_ALL = /({%.*?%}|{{.*?}}|{#[^]*?#})/;
+
 	const marks = [];
 	const block_stack = [];
 	const tokens = input.split(RE_ALL).filter(v => v);
@@ -177,30 +177,31 @@ export function scan(input: string): Marks {
  *
  **/
 
-export function parse(marks) {
-	const NODE_TYPES = [
-		'value_text',
-		'value_variable',
-		'expression_filter',
-		'expression_conditional',
-		'expression_logical',
-		'expression_unary',
-		'block_if',
-		'block_for',
-		'block_comment',
-		'block_include',
-	];
+const NODE_TYPES = [
+	'value_text',
+	'value_variable',
+	'expression_filter',
+	'expression_conditional',
+	'expression_logical',
+	'expression_unary',
+	'block_if',
+	'block_for',
+	'block_comment',
+	'block_include',
+];
 
-	class Node {
-		constructor(type, properties) {
-			this.type = type;
+class Node {
+	constructor(type, properties) {
+		this.type = type;
 
-			for (const key in properties) {
-				this[key] = properties[key];
-			}
+		for (const key in properties) {
+			this[key] = properties[key];
 		}
 	}
+}
 
+
+export function parse(marks) {
 	const RE_OPERATOR_FILTER = / ?\| ?/;
 	const RE_OPERATOR_TERNARY = /[?:]/;
 	const RE_OPERATOR_LOGICAL = /( not | and | or )/;
