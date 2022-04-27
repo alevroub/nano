@@ -62,9 +62,9 @@ class NanoError extends Error {
 // }
 
 const MARK_TYPES = [
-	'block',
-	'tag',
-	'comment',
+	'block', 
+	'tag', 
+	'comment', 
 	'text'
 ];
 
@@ -100,10 +100,12 @@ export function scan(input: string): Marks {
 
 				if (last_mark.value === 'else') {
 					/**
-					 * 	if-else exception: first push the else-mark to the stack
-					 * 	to keep its value and then skip to the next mark (pop).
-					 * 	the next mark has to be an if statement, otherwise a
-					 * 	statement mismatch will occur throwing a syntax error
+					 * 
+					 * 	first push the else-mark to the stack to keep its value 
+					 * 	nested in the if-block and then skip to the next mark
+					 * 	which has to be an if statement, otherwise a statement 
+					 * 	mismatch will occur throwing a syntax error
+					 * 
 					 **/
 
 					output_mark(last_mark);
@@ -166,7 +168,7 @@ export function scan(input: string): Marks {
  *
  * 	|	NODE TYPES
  * 	|		[x] value_text                		<div>hello</div>
- * 	|		[x] value_variable            		variable.dot.separated *OR* variable['named-key']
+ * 	|		[x] value_variable            		variable.dot.separated  *OR*  variable['named-key']
  * 	|		[x] expression_filter         		variable | filter_name
  * 	|		[x] expression_conditional    		variable ? 'value_if_true' : 'value_if_false'
  * 	|		[x] expression_logical        		not A or B and C
@@ -200,7 +202,6 @@ class Node {
 	}
 }
 
-
 export function parse(marks) {
 	const RE_OPERATOR_FILTER = / ?\| ?/;
 	const RE_OPERATOR_TERNARY = /[?:]/;
@@ -227,7 +228,7 @@ export function parse(marks) {
 	function parse_value(value_string: string) {
 		if (RE_VARIABLE_IN_QUOTES.test(value_string)) {
 			return new Node(NODE_TYPES[0], {
-				value: value_string.slice(1, -1)
+				value: value_string.slice(1, -1),
 			});
 		}
 
@@ -253,7 +254,7 @@ export function parse(marks) {
 			}
 
 			return new Node(NODE_TYPES[1], {
-				properties: [variable_root, ...variables_nested]
+				properties: [variable_root, ...variables_nested],
 			});
 		}
 
@@ -266,7 +267,7 @@ export function parse(marks) {
 		}
 
 		return new Node(NODE_TYPES[1], {
-			properties: variable_parts
+			properties: variable_parts,
 		});
 	}
 
@@ -287,7 +288,7 @@ export function parse(marks) {
 
 		return new Node(NODE_TYPES[2], {
 			value: parse_value(variable),
-			filters: filters
+			filters: filters,
 		});
 	}
 
@@ -298,12 +299,12 @@ export function parse(marks) {
 			throw new NanoError('Invalid conditional expression');
 		}
 
-		const [ test, consequent, alternate ] = statement_parts;
+		const [test, consequent, alternate] = statement_parts;
 
 		return new Node(NODE_TYPES[3], {
 			test: parse_expression(test),
 			consequent: parse_expression(consequent),
-			alternate: parse_expression(alternate)
+			alternate: parse_expression(alternate),
 		});
 	}
 
@@ -326,36 +327,36 @@ export function parse(marks) {
 		const split_or = expression_string.split(RE_OPERATOR_OR);
 
 		if (split_or.length === 3) {
-			const [ left, operator, right ] = split_or;
+			const [left, operator, right] = split_or;
 
 			return new Node(NODE_TYPES[4], {
 				left: parse_expression_logical(left),
 				operator,
-				right: parse_expression_logical(right)
-			})
+				right: parse_expression_logical(right),
+			});
 		}
 
 		const split_and = expression_string.split(RE_OPERATOR_AND);
 
 		if (split_and.length === 3) {
-			const [ left, operator, right ] = split_and;
+			const [left, operator, right] = split_and;
 
 			return new Node(NODE_TYPES[4], {
 				left: parse_expression_logical(left),
 				operator,
-				right: parse_expression_logical(right)
-			})
+				right: parse_expression_logical(right),
+			});
 		}
 
 		const split_not = expression_string.split(RE_OPERATOR_NOT).filter(v => v);
 
 		if (split_not.length === 2) {
-			const [ operator, value ] = split_not;
+			const [operator, value] = split_not;
 
 			return new Node(NODE_TYPES[5], {
 				operator,
-				value: parse_expression_logical(value)
-			})
+				value: parse_expression_logical(value),
+			});
 		}
 
 		return parse_value(expression_string);
@@ -378,11 +379,11 @@ export function parse(marks) {
 	}
 
 	function parse_block_if_mark(mark) {
-		const [ test ] = mark.value.split(RE_KEYWORD_IF).filter(v => v);
+		const [test] = mark.value.split(RE_KEYWORD_IF).filter(v => v);
 
 		function return_else_marks() {
 			const last_mark = mark.marks[mark.marks.length - 1];
-			const has_else_block = last_mark && last_mark.type === "block" && last_mark.value === 'else';
+			const has_else_block = last_mark && last_mark.type === 'block' && last_mark.value === 'else';
 			return has_else_block ? mark.marks.pop().marks : [];
 		}
 
@@ -393,7 +394,7 @@ export function parse(marks) {
 		return new Node(NODE_TYPES[6], {
 			test: parse_expression(test),
 			consequent: consequent ? parse(consequent) : null,
-			alternate: alternate ? parse(alternate) : null
+			alternate: alternate ? parse(alternate) : null,
 		});
 	}
 
@@ -415,18 +416,18 @@ export function parse(marks) {
 			return parse_block_for_mark(mark);
 		}
 
-		throw new NanoError('Invalid block statement')
+		throw new NanoError('Invalid block statement');
 	}
 
 	function parse_comment_mark(mark) {
 		return new Node(NODE_TYPES[8], {
-			value: mark.value
+			value: mark.value,
 		});
 	}
 
 	function parse_text_mark(mark) {
 		return new Node(NODE_TYPES[0], {
-			value: mark.value
+			value: mark.value,
 		});
 	}
 
