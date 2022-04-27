@@ -25,15 +25,15 @@
 /**
  *
  *	1. SCAN
- * 	input -> lexemes -> tokens
+ * 	input -> tokens -> marks
  *
- * 	lexer that splits the string input into lexemes and returns
- * 	tokens. the goal in this step is to make sure the structure of
- * 	all blocks are valid, e.g. check for missing or duplicate tags.
- * 	invalid block statements or syntax errors are checked in the next
- * 	step when the tokens are used to create nodes.
+ * 	lexer that splits the string builds a rough mark tree.
+ * 	the goal in this step is to make sure the structure of all
+ * 	blocks are valid, e.g. check for missing or duplicate tags.
+ * 	invalid block statements or syntax errors are checked in the
+ * 	next step when the marks are used to create nodes.
  *
- *		|	TOKEN TYPES
+ *		|	MARK TYPES
  *		|		0 - BLOCK   	{% if/else/for %}
  *		|		1 - VARIABLE	{{ variable }}
  *		|		2 - COMMENT 	{# comment #}
@@ -45,81 +45,85 @@ class NanoError extends Error {
 	public name = 'NanoSyntaxError';
 }
 
-type Token = {
-	type: string;
-	value: string;
-	tokens?: Array<Token>;
-};
+// type Mark = {
+// 	type: string;
+// 	value: string;
+// 	marks?: Array<Mark>;
+// };
 
-type Node = {
-	type: string;
-	value: string;
-	properties?: Record<string, any>;
-};
+// type Node = {
+// 	type: string;
+// };
+
+// type ExpressionLogicalNode & Node {
+// 	left: string;
+// 	right: string;
+// 	operator: string;
+// }
 
 const RE_BLOCK = /^{%.*?%}$/;
 const RE_TAG = /^{{.*?}}$/;
 const RE_COMMENT = /^{#[^]*?#}$/;
 const RE_ALL = /({%.*?%}|{{.*?}}|{#[^]*?#})/;
 
-const TOKEN_TYPES = [
+const MARK_TYPES = [
 	'block',
 	'tag',
 	'comment',
-	'text',
+	'text'
 ];
 
-class Token {
+class Mark {
 	constructor(type, value) {
 		this.type = type;
 		this.value = value;
 
-		if (type === TOKEN_TYPES[0]) {
-			this.tokens = [];
+		if (type === MARK_TYPES[0]) {
+			this.marks = [];
 		}
 	}
 }
 
-export function scan(input: string): Tokens {
-	const tokens = [];
+export function scan(input: string): Marks {
+	const marks = [];
 	const block_stack = [];
-	const lexemes = input.split(RE_ALL).filter(v => v);
+	const tokens = input.split(RE_ALL).filter(v => v);
 
-	for (const lexeme of lexemes) {
-		const token_type = return_token_type(lexeme);
-		const token_content = token_type !== TOKEN_TYPES[3] ? lexeme.slice(2, -2).trim() : lexeme;
+	for (const token of tokens) {
+		const mark_type = return_mark_type(token);
+		const mark_content = mark_type !== MARK_TYPES[3] ? token.slice(2, -2).trim() : token;
 
-		if (token_type === TOKEN_TYPES[0]) {
-			if (token_content.startsWith('end')) {
-				const end_statement_type = token_content.slice(3); //endif -> if
-				let last_token = block_stack.pop();
+		if (mark_type === MARK_TYPES[0]) {
+			if (mark_content.startsWith('end')) {
+				const end_statement_type = mark_content.slice(3); //endif -> if
+				let last_mark = block_stack.pop();
 
-				if (last_token.value === 'else') {
+				if (last_mark.value === 'else') {
 					/**
-					 * if-else exception: first push the else-token to the stack
-					 * to keep its value and then skip to the next token (pop).
-					 * the next token has to be an if statement, otherwise a
+					 * if-else exception: first push the else-mark to the stack
+					 * to keep its value and then skip to the next mark (pop).
+					 * the next mark has to be an if statement, otherwise a
 					 * statement mismatch will occur throwing a syntax error
 					 **/
 
-					output_token(last_token);
-					last_token = block_stack.pop();
+					output_mark(last_mark);
+					last_mark = block_stack.pop();
 				}
 
-				if (!last_token) {
+				if (!last_mark) {
 					throw new NanoError('Too many closing tags');
 				}
 
-				if (!last_token.value.startsWith(end_statement_type)) {
+				if (!last_mark.value.startsWith(end_statement_type)) {
 					throw new NanoError('Invalid closing tag');
 				}
 
-				output_token(last_token);
+				output_mark(last_mark);
 			} else {
-				block_stack.push(new Token(token_type, token_content));
+				block_stack.push(new Mark(mark_type, mark_content));
 			}
 		} else {
-			output_token(new Token(token_type, token_content));
+			output_mark(new Mark(mark_type, mark_content));
 		}
 	}
 
@@ -127,36 +131,36 @@ export function scan(input: string): Tokens {
 		throw new NanoError('Missing closing tag');
 	}
 
-	function output_token(token) {
+	function output_mark(mark) {
 		if (block_stack.length > 0) {
-			block_stack[block_stack.length - 1].tokens.push(token);
+			block_stack[block_stack.length - 1].marks.push(mark);
 		} else {
-			tokens.push(token);
+			marks.push(mark);
 		}
 	}
 
-	function return_token_type(lexeme) {
-		if (RE_BLOCK.test(lexeme)) {
-			return TOKEN_TYPES[0];
-		} else if (RE_TAG.test(lexeme)) {
-			return TOKEN_TYPES[1];
-		} else if (RE_COMMENT.test(lexeme)) {
-			return TOKEN_TYPES[2];
+	function return_mark_type(token) {
+		if (RE_BLOCK.test(token)) {
+			return MARK_TYPES[0];
+		} else if (RE_TAG.test(token)) {
+			return MARK_TYPES[1];
+		} else if (RE_COMMENT.test(token)) {
+			return MARK_TYPES[2];
 		} else {
-			return TOKEN_TYPES[3];
+			return MARK_TYPES[3];
 		}
 	}
 
-	return tokens;
+	return marks;
 }
 
 /**
  *
  * 2. PARSE
- * 	tokens -> nodes
+ * 	marks -> nodes
  *
- * 	parser that takes the initial tree of tokens and builds a tree of
- * 	nodes with more information about each token match. this step takes
+ * 	parser that takes the initial tree of marks and builds a tree of
+ * 	nodes with more information about each mark match. this step takes
  * 	care of syntax formatting and should provide all relevant properties
  * 	to the renderer.
  *
@@ -166,6 +170,7 @@ export function scan(input: string): Tokens {
  * 	|		[x] expression_value          		{{ variable.dot.separated }} *OR* {{ variable['named-key'] }}
  * 	|		[x] expression_filter         		{{ variable | filter_name }}
  * 	|		[x] expression_conditional    		{{ variable ? 'value_if_true' : 'value_if_false' }}
+ * 	|		[ ] expression_logical....    		{{ A or B }} {{ A and B }}
  * 	|		[ ] block_comment             		{# commented #}
  * 	|		[ ] block_if                  		{% if variable_1 %}
  * 	|		[ ] block_for                 		{% for (num, index) in numbers | unique %}
@@ -177,13 +182,14 @@ export function scan(input: string): Tokens {
  *
  **/
 
-export function parse(tokens) {
+export function parse(marks) {
 	const NODE_TYPES = [
 		'value_text',
 		'value_variable',
 		'expression_value',
 		'expression_filter',
 		'expression_conditional',
+		'expression_logical',
 		'block_comment',
 		'block_if',
 		'block_for',
@@ -191,163 +197,211 @@ export function parse(tokens) {
 	];
 
 	class Node {
-		constructor(type, value, properties) {
+		constructor(type, properties) {
 			this.type = type;
-			this.value = value;
 
-			if (properties) {
-				this.properties = properties;
+			for (const key in properties) {
+				this[key] = properties[key];
 			}
 		}
 	}
+
+	const RE_OPERATOR_FILTER = / ?\| ?/;
+	const RE_OPERATOR_TERNARY = /[?:]/;
+	const RE_ACCESS_DOT = /\./;
+	const RE_ACCESS_BRACKET = /\[["']|['"]\]/;
+
+	const RE_VARIABLE_EXPRESSION_LIKE = /[\&\|\<\>\+\-\=\!\{\}\,]/;
+	const RE_VARIABLE_IN_QUOTES = /^['"].+?['"]$/;
+	const RE_VARIABLE_BRACKET_NOTATION = /\[['"]/;
+	const RE_VARIABLE_DIGIT = /^-?(\d|\.\d)+$/;
+	const RE_VARIABLE_VALID = /^[^0-9][0-9a-zA-Z]*$/;
+
+	const RE_METHOD_INVALID = /[\- ]/;
+
+	const RE_KEYWORD_IF = /^if\ /;
+	const RE_KEYWORD_FOR = /^(for)|(in)/;
+	const RE_OPERATOR_LOGICAL = /\ (and|or)\ /;
 
 	const nodes = [];
 
-	function parse_expression(token) {
-		const RE_SEPARATOR_FILTER = / ?\| ?/;
-		const RE_SEPARATOR_DOT = /\./;
-		const RE_SEPARATOR_TERNARY = /[?:]/;
-		const RE_SEPARATOR_BRACES = /\[["']|['"]\]/;
-
-		const RE_VARIABLE_EXPRESSION_LIKE = /[\&\|\<\>\+\-\=\!\{\}\,]/;
-		const RE_VARIABLE_QUOTED = /^['"].+?['"]$/;
-		const RE_VARIABLE_NAMED_KEY = /\[['"]/;
-		const RE_VARIABLE_DIGIT = /^-?(\d|\.\d)+$/;
-		const RE_VARIABLE_VALID = /^[^0-9][0-9a-zA-Z]*$/;
-		const RE_METHOD_INVALID = /[\- ]/;
-
-		function parse_value(variable) {
-			if (RE_VARIABLE_QUOTED.test(variable)) {
-				const variable_unquoted = variable.slice(1, -1);
-				return new Node(NODE_TYPES[0], variable_unquoted);
-			}
-
-			if (RE_VARIABLE_NAMED_KEY.test(variable)) {
-				if (RE_SEPARATOR_DOT.test(variable) && RE_SEPARATOR_BRACES.test(variable)) {
-					throw new NanoError('Avoid combined object access notation')
-				}
-
-				/**
-				 * variable_root["nested"]["variables"]
-				 *
-				 * nested variables are parsed as strings by default and
-				 * therefore don't have to be checked as valid identifiers
-				*/
-
-				const variable_parts = variable.split(RE_SEPARATOR_BRACES);
-				const variable_root = variable_parts.shift();
-				const variables_nested = variable_parts.filter(v => v);
-
-				return new Node(NODE_TYPES[1], [ensure_valid_identifier(variable_root), ...variables_nested]);
-			}
-
-			const variable_parts = variable.split(RE_SEPARATOR_DOT);
-
-			for (const part of variable_parts) {
-				ensure_valid_identifier(part, variable);
-			}
-
-			return new Node(NODE_TYPES[1], variable_parts);
+	function ensure_valid_identifier(identifier: string, context: string) {
+		if (!RE_VARIABLE_VALID.test(identifier)) {
+			throw new NanoError(`Invalid variable name: "${context || identifier}"`);
 		}
 
-		function ensure_valid_identifier(variable, context) {
-			if (!RE_VARIABLE_VALID.test(variable)) {
-				throw new NanoError(`Invalid variable name: "${context || variable}"`)
-			}
-
-			return variable;
-		}
-
-		if (token.value.includes('?')) {
-			const statement_parts = token.value.split(RE_SEPARATOR_TERNARY).map(v => v.trim());
-			const statement_nodes = [];
-
-			if (statement_parts.length !== 3) {
-				throw new NanoError('Invalid conditional expression');
-			}
-
-			for (const part of statement_parts) {
-				statement_nodes.push(parse_value(part))
-			}
-
-			return new Node(NODE_TYPES[4], statement_nodes);
-		}
-
-		if (token.value.includes('|')) {
-			const statement_parts = token.value.split(RE_SEPARATOR_FILTER).map(v => v.trim());
-			const variable = statement_parts.shift();
-			const filters = statement_parts.filter(v => v);
-
-			if (filters.length === 0) {
-				throw new NanoError('Invalid filter syntax');
-			}
-
-			for (const filter of filters) {
-				if (RE_METHOD_INVALID.test(filter)) {
-					throw new NanoError(`Invalid filter name: ${filter}`);
-				}
-			}
-
-			return new Node(NODE_TYPES[3], parse_value(variable), { filters });
-		}
-
-		return new Node(NODE_TYPES[2], parse_value(token.value));
+		return identifier;
 	}
 
-
-	function parse_block(token) {
-		const RE_IF_SEPARATOR = /^if/
-		const RE_FOR_SEPARATOR = /^(for)|(in)/
-
-		if (token.value.startsWith('if')) {
-			const statement_parts = token.value.split(RE_IF_SEPARATOR);
-			const statement = statement_parts.shift();
-			const condition = statement_parts.filter(v => v).shift();
-			const else_condition = token.tokens.find(t => t.value === 'else');
-
-			if (!condition) {
-				throw new NanoError('Missing condition in if statement')
-			}
-
-			const block_tokens = token.tokens.filter(t => t.value !== 'else');
-			const block_properties = {
-				condition: parse_expression(new Token(TOKEN_TYPES[1], condition))
-			};
-
-			if (else_condition) {
-				block_properties.else = parse_expression(else_condition)
-			}
-
-			return new Node('block_if', parse(block_tokens), block_properties);
+	function parse_value(value_string: string) {
+		if (RE_VARIABLE_IN_QUOTES.test(value_string)) {
+			return new Node("VALUE_TEXT", {
+				value: value_string.slice(1, -1)
+			});
 		}
 
-		if (token.value.startsWith('for')) {
-			const statement_parts = token.value.split(' ');
-			return new Node('block', token.value);
+		if (RE_VARIABLE_BRACKET_NOTATION.test(value_string)) {
+			if (RE_ACCESS_DOT.test(value_string) && RE_ACCESS_BRACKET.test(value_string)) {
+				throw new NanoError('Avoid combined object access notation');
+			}
+
+			/**
+			 * variable_root["nested"]["properties"]
+			 *
+			 * nested properties are parsed as strings by default and
+			 * therefore don't have to be checked as valid identifiers
+			 * to the same extent
+			 */
+
+			const variable_parts = value_string.split(RE_ACCESS_BRACKET);
+			const variable_root = variable_parts.shift();
+			const variables_nested = variable_parts.filter(v => v);
+
+			return new Node("VALUE_VARIABLE", {
+				properties: [ensure_valid_identifier(variable_root), ...variables_nested]
+			});
 		}
+
+		const variable_parts = value_string.split(RE_ACCESS_DOT);
+
+		for (const part of variable_parts) {
+			ensure_valid_identifier(part, value_string);
+		}
+
+		return new Node("VALUE_VARIABLE", {
+			properties: variable_parts
+		});
 	}
 
-	function parse_comment(token) {
-		return new Node(NODE_TYPES[5], token.value);
+	function parse_expression_conditional(mark) {
+		const statement_segments = mark.value.split(RE_OPERATOR_TERNARY).map(v => v.trim());
+		const statement_test = parse_expression_logical(statement_segments.shift());
+		const statement_consequent_alternate = [];
+
+		/* test, consequent, alternate */
+
+		if (statement_segments.length !== 3) {
+			throw new NanoError('Invalid conditional expression');
+		}
+
+		for (const part of statement_segments) {
+			statement_consequent_alternate.push(parse_value(part));
+		}
+
+		return new Node(NODE_TYPES[4], statement_consequent_alternate);
 	}
 
-	function parse_text(token) {
-		return new Node(NODE_TYPES[0], token.value);
+	function parse_expression_filter(mark) {
+		const statement_parts = mark.value.split(RE_OPERATOR_FILTER).map(v => v.trim());
+		const variable = statement_parts.shift();
+		const filters = statement_parts.filter(v => v);
+
+		if (filters.length === 0) {
+			throw new NanoError('Invalid filter syntax');
+		}
+
+		for (const filter of filters) {
+			if (RE_METHOD_INVALID.test(filter)) {
+				throw new NanoError(`Invalid filter name: ${filter}`);
+			}
+		}
+
+		return new Node("EXPRESSION_FILTER", {
+			value: parse_value(variable),
+			filters: filters
+		});
 	}
 
-	for (const token of tokens) {
-		switch (token.type) {
-			case TOKEN_TYPES[0]:
-				nodes.push(parse_block(token));
+	function parse_expression_value(mark) {
+		return new Node("EXPRESSION_VALUE", {
+			value: parse_value(mark.value)
+		});
+	}
+
+	function parse_expression(expression_string: string) {
+		/* only logical expressions for now basically */
+	}
+
+	/**
+	 * inner blocks
+	 * */
+
+	function parse_block_if(mark) {
+		const condition_expression = mark.value.split(RE_KEYWORD_IF).filter(v => v).pop();
+		const condition_parsed = parse_expression(condition_expression);
+
+		const last_mark = mark.marks[mark.marks.length - 1];
+		const else_condition = last_mark.type === "block" && last_mark.value === 'else' ? mark.marks.pop() : null;
+
+		// if (!condition) {
+		// 	throw new NanoError('Missing condition in if statement');
+		// }
+
+		return new Node('BLOCK_IF', {
+			condition: condition_parsed,
+			consequent: '',
+			alternate: ''
+		});
+	}
+
+	function parse_block_for(mark) {
+		const statement_parts = mark.value.split(' ');
+		return new Node('BLOCK_FOR', mark.value);
+	}
+
+	/**
+	 * outer blocks
+	 * */
+
+	function parse_tag(mark) {
+		if (mark.value.includes('?')) {
+			return parse_expression_conditional(mark);
+		}
+
+		if (mark.value.includes('|')) {
+			return parse_expression_filter(mark);
+		}
+
+		return parse_expression_value(mark);
+	}
+
+	function parse_block(mark) {
+		if (mark.value.startsWith('if ')) {
+			return parse_block_if(mark);
+		}
+
+		if (mark.value.startsWith('for ')) {
+			return parse_block_for(mark);
+		}
+
+		throw new NanoError('Invalid block statement')
+	}
+
+	function parse_comment(mark) {
+		return new Node("BLOCK_COMMENT", {
+			value: mark.value
+		});
+	}
+
+	function parse_text(mark) {
+		return new Node("VALUE_TEXT", {
+			value: mark.value
+		});
+	}
+
+	for (const mark of marks) {
+		switch (mark.type) {
+			case MARK_TYPES[0]:
+				nodes.push(parse_block(mark));
 				break;
-			case TOKEN_TYPES[1]:
-				nodes.push(parse_expression(token));
+			case MARK_TYPES[1]:
+				nodes.push(parse_tag(mark));
 				break;
-			case TOKEN_TYPES[2]:
-				nodes.push(parse_comment(token));
+			case MARK_TYPES[2]:
+				nodes.push(parse_comment(mark));
 				break;
-			case TOKEN_TYPES[3]:
-				nodes.push(parse_text(token));
+			case MARK_TYPES[3]:
+				nodes.push(parse_text(mark));
 				break;
 		}
 	}
@@ -367,4 +421,4 @@ export function parse(tokens) {
  *
  * */
 
-export function compile(nodes, data) {}
+export function evaluate(nodes, data) {}
