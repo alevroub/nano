@@ -181,13 +181,13 @@ export function parse(marks) {
 	const NODE_TYPES = [
 		'value_text',
 		'value_variable',
-		'expression_value',
 		'expression_filter',
 		'expression_conditional',
 		'expression_logical',
-		'block_comment',
+		'expression_unary',
 		'block_if',
 		'block_for',
+		'block_comment',
 		'block_include',
 	];
 
@@ -203,6 +203,7 @@ export function parse(marks) {
 
 	const RE_OPERATOR_FILTER = / ?\| ?/;
 	const RE_OPERATOR_TERNARY = /[?:]/;
+	const RE_OPERATOR_LOGICAL = /( not | and | or )/;
 	const RE_ACCESS_DOT = /\./;
 	const RE_ACCESS_BRACKET = /\[["']|['"]\]/;
 
@@ -210,84 +211,66 @@ export function parse(marks) {
 	const RE_VARIABLE_IN_QUOTES = /^['"].+?['"]$/;
 	const RE_VARIABLE_BRACKET_NOTATION = /\[['"]/;
 	const RE_VARIABLE_DIGIT = /^-?(\d|\.\d)+$/;
-	const RE_VARIABLE_VALID = /^[^0-9][0-9a-zA-Z]*$/;
+	const RE_VARIABLE_VALID = /^[^0-9][0-9a-zA-Z_]*$/;
 
 	const RE_METHOD_INVALID = /[\- ]/;
 
 	const RE_KEYWORD_IF = /^if\ /;
 	const RE_KEYWORD_FOR = /^(for)|(in)/;
-	const RE_OPERATOR_LOGICAL = /\ (and|or)\ /;
+	const RE_OPERATOR_AND = /\ (and)\ /;
+	const RE_OPERATOR_OR = /\ (or)\ /;
+	const RE_OPERATOR_NOT = /^(not)\ /;
 
 	const nodes = [];
 
-	function ensure_valid_identifier(identifier: string, context: string) {
-		if (!RE_VARIABLE_VALID.test(identifier)) {
-			throw new NanoError(`Invalid variable name: "${context || identifier}"`);
-		}
-
-		return identifier;
-	}
-
 	function parse_value(value_string: string) {
 		if (RE_VARIABLE_IN_QUOTES.test(value_string)) {
-			return new Node("VALUE_TEXT", {
+			return new Node(NODE_TYPES[0], {
 				value: value_string.slice(1, -1)
 			});
 		}
 
 		if (RE_VARIABLE_BRACKET_NOTATION.test(value_string)) {
 			if (RE_ACCESS_DOT.test(value_string) && RE_ACCESS_BRACKET.test(value_string)) {
-				throw new NanoError('Avoid combined object access notation');
+				throw new NanoError(`Avoid combined object access notation: "${value_string}"`);
 			}
-
-			/**
-			 * variable_root["nested"]["properties"]
-			 *
-			 * nested properties are parsed as strings by default and
-			 * therefore don't have to be checked as valid identifiers
-			 * to the same extent
-			 */
 
 			const variable_parts = value_string.split(RE_ACCESS_BRACKET);
 			const variable_root = variable_parts.shift();
 			const variables_nested = variable_parts.filter(v => v);
 
-			return new Node("VALUE_VARIABLE", {
-				properties: [ensure_valid_identifier(variable_root), ...variables_nested]
+			/**
+			 * 	variable_root["nested"]["properties"]
+			 *
+			 * 	nested properties are parsed as strings by default and
+			 * 	therefore don't have to be checked as valid identifiers
+			 * 	to the same extent
+			 */
+
+			if (!RE_VARIABLE_VALID.test(variable_root)) {
+				throw new NanoError(`Invalid variable name: "${variable_root}"`);
+			}
+
+			return new Node(NODE_TYPES[1], {
+				properties: [variable_root, ...variables_nested]
 			});
 		}
 
 		const variable_parts = value_string.split(RE_ACCESS_DOT);
 
 		for (const part of variable_parts) {
-			ensure_valid_identifier(part, value_string);
+			if (!RE_VARIABLE_VALID.test(part)) {
+				throw new NanoError(`Invalid variable name: "${value_string}"`);
+			}
 		}
 
-		return new Node("VALUE_VARIABLE", {
+		return new Node(NODE_TYPES[1], {
 			properties: variable_parts
 		});
 	}
 
-	function parse_expression_conditional(mark) {
-		const statement_segments = mark.value.split(RE_OPERATOR_TERNARY).map(v => v.trim());
-		const statement_test = parse_expression_logical(statement_segments.shift());
-		const statement_consequent_alternate = [];
-
-		/* test, consequent, alternate */
-
-		if (statement_segments.length !== 3) {
-			throw new NanoError('Invalid conditional expression');
-		}
-
-		for (const part of statement_segments) {
-			statement_consequent_alternate.push(parse_value(part));
-		}
-
-		return new Node(NODE_TYPES[4], statement_consequent_alternate);
-	}
-
-	function parse_expression_filter(mark) {
-		const statement_parts = mark.value.split(RE_OPERATOR_FILTER).map(v => v.trim());
+	function parse_expression_filter(expression_string: string) {
+		const statement_parts = expression_string.split(RE_OPERATOR_FILTER).map(v => v.trim());
 		const variable = statement_parts.shift();
 		const filters = statement_parts.filter(v => v);
 
@@ -296,90 +279,152 @@ export function parse(marks) {
 		}
 
 		for (const filter of filters) {
-			if (RE_METHOD_INVALID.test(filter)) {
-				throw new NanoError(`Invalid filter name: ${filter}`);
+			if (!RE_VARIABLE_VALID.test(filter)) {
+				throw new NanoError(`Invalid filter name: "${filter}"`);
 			}
 		}
 
-		return new Node("EXPRESSION_FILTER", {
+		return new Node(NODE_TYPES[2], {
 			value: parse_value(variable),
 			filters: filters
 		});
 	}
 
-	function parse_expression_value(mark) {
-		return new Node("EXPRESSION_VALUE", {
-			value: parse_value(mark.value)
+	function parse_expression_conditional(expression_string: string) {
+		const statement_parts = expression_string.split(RE_OPERATOR_TERNARY).map(v => v.trim());
+
+		if (statement_parts.length < 3) {
+			throw new NanoError('Invalid conditional expression');
+		}
+
+		const [ test, consequent, alternate ] = statement_parts;
+
+		return new Node(NODE_TYPES[3], {
+			test: parse_expression(test),
+			consequent: parse_expression(consequent),
+			alternate: parse_expression(alternate)
 		});
+	}
+
+	function parse_expression_logical(expression_string: string) {
+		/**
+		 *
+		 * 	only logical expressions for now
+		 *
+		 * 	| 	NOT 3
+		 * 	| 	AND 2
+		 * 	| 	OR  1
+		 * 	|
+		 * 	|	A or B and C      	-->	A or (B and C)
+		 * 	|	A and B or C and D 	-->	(A and B) or (C and D)
+		 * 	|	A and B and C or D 	-->	((A and B) and C) or D
+		 * 	|	not A and B or C    	-->	((not A) and B) or C
+		 *
+		 * */
+
+		const split_or = expression_string.split(RE_OPERATOR_OR);
+
+		if (split_or.length === 3) {
+			const [ left, operator, right ] = split_or;
+
+			return new Node(NODE_TYPES[4], {
+				left: parse_expression_logical(left),
+				operator,
+				right: parse_expression_logical(right)
+			})
+		}
+
+		const split_and = expression_string.split(RE_OPERATOR_AND);
+
+		if (split_and.length === 3) {
+			const [ left, operator, right ] = split_and;
+
+			return new Node(NODE_TYPES[4], {
+				left: parse_expression_logical(left),
+				operator,
+				right: parse_expression_logical(right)
+			})
+		}
+
+		const split_not = expression_string.split(RE_OPERATOR_NOT).filter(v => v);
+
+		if (split_not.length === 2) {
+			const [ operator, value ] = split_not;
+
+			return new Node(NODE_TYPES[5], {
+				operator,
+				value: parse_expression_logical(value)
+			})
+		}
+
+		return parse_value(expression_string);
 	}
 
 	function parse_expression(expression_string: string) {
-		/* only logical expressions for now basically */
+		if (RE_OPERATOR_TERNARY.test(expression_string)) {
+			return parse_expression_conditional(expression_string);
+		}
+
+		if (RE_OPERATOR_FILTER.test(expression_string)) {
+			return parse_expression_filter(expression_string);
+		}
+
+		if (RE_OPERATOR_LOGICAL.test(expression_string)) {
+			return parse_expression_logical(expression_string);
+		}
+
+		return parse_value(expression_string);
 	}
 
-	/**
-	 * inner blocks
-	 * */
+	function parse_block_if_mark(mark) {
+		const [ test ] = mark.value.split(RE_KEYWORD_IF).filter(v => v);
 
-	function parse_block_if(mark) {
-		const condition_expression = mark.value.split(RE_KEYWORD_IF).filter(v => v).pop();
-		const condition_parsed = parse_expression(condition_expression);
+		function return_else_marks() {
+			const last_mark = mark.marks[mark.marks.length - 1];
+			const has_else_block = last_mark && last_mark.type === "block" && last_mark.value === 'else';
+			return has_else_block ? mark.marks.pop().marks : [];
+		}
 
-		const last_mark = mark.marks[mark.marks.length - 1];
-		const else_condition = last_mark.type === "block" && last_mark.value === 'else' ? mark.marks.pop() : null;
+		const else_marks = return_else_marks();
+		const consequent = mark.marks.length > 0 ? mark.marks : null;
+		const alternate = else_marks.length > 0 ? else_marks : null;
 
-		// if (!condition) {
-		// 	throw new NanoError('Missing condition in if statement');
-		// }
-
-		return new Node('BLOCK_IF', {
-			condition: condition_parsed,
-			consequent: '',
-			alternate: ''
+		return new Node(NODE_TYPES[6], {
+			test: parse_expression(test),
+			consequent: consequent ? parse(consequent) : null,
+			alternate: alternate ? parse(alternate) : null
 		});
 	}
 
-	function parse_block_for(mark) {
+	function parse_block_for_mark(mark) {
 		const statement_parts = mark.value.split(' ');
-		return new Node('BLOCK_FOR', mark.value);
+		return new Node(NODE_TYPES[7], mark.value);
 	}
 
-	/**
-	 * outer blocks
-	 * */
-
-	function parse_tag(mark) {
-		if (mark.value.includes('?')) {
-			return parse_expression_conditional(mark);
-		}
-
-		if (mark.value.includes('|')) {
-			return parse_expression_filter(mark);
-		}
-
-		return parse_expression_value(mark);
+	function parse_tag_mark(mark) {
+		return parse_expression(mark.value);
 	}
 
-	function parse_block(mark) {
+	function parse_block_mark(mark) {
 		if (mark.value.startsWith('if ')) {
-			return parse_block_if(mark);
+			return parse_block_if_mark(mark);
 		}
 
 		if (mark.value.startsWith('for ')) {
-			return parse_block_for(mark);
+			return parse_block_for_mark(mark);
 		}
 
 		throw new NanoError('Invalid block statement')
 	}
 
-	function parse_comment(mark) {
-		return new Node("BLOCK_COMMENT", {
+	function parse_comment_mark(mark) {
+		return new Node(NODE_TYPES[8], {
 			value: mark.value
 		});
 	}
 
-	function parse_text(mark) {
-		return new Node("VALUE_TEXT", {
+	function parse_text_mark(mark) {
+		return new Node(NODE_TYPES[0], {
 			value: mark.value
 		});
 	}
@@ -387,16 +432,16 @@ export function parse(marks) {
 	for (const mark of marks) {
 		switch (mark.type) {
 			case MARK_TYPES[0]:
-				nodes.push(parse_block(mark));
+				nodes.push(parse_block_mark(mark));
 				break;
 			case MARK_TYPES[1]:
-				nodes.push(parse_tag(mark));
+				nodes.push(parse_tag_mark(mark));
 				break;
 			case MARK_TYPES[2]:
-				nodes.push(parse_comment(mark));
+				nodes.push(parse_comment_mark(mark));
 				break;
 			case MARK_TYPES[3]:
-				nodes.push(parse_text(mark));
+				nodes.push(parse_text_mark(mark));
 				break;
 		}
 	}
