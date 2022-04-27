@@ -8,7 +8,9 @@ const TEST_DATA = {
 }
 
 const TEST_INPUT = [
-	'{% if a %}',
+	'{% if a   %}',
+	'"AAA"',
+	'{{ eee }}',
 	'"AAA"',
 	'{% else %}',
 	'{{ BBB }}',
