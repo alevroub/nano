@@ -1,24 +1,20 @@
 // Copyright (c) 2022 Alejandro V. Rojas. All rights reserved. MIT license.
 
 /**
+ * 
+ * 	v0.0.2
  *
- * 	>> SOON
- * 		[ ] {@ include @}
- * 		[ ] support function(syntax) for filters
- * 		[ ] basic expressions: && || == != >, >=, <, <=
- *
- * */
-
-/**
- * v0.0.1
- *
- * Nano template engine – a very simple (semi) logic-less template engine.
- * This was initially made for playing around with simple prototypes deployed
- * with Deno Deploy, which currently doesn't play very well with template
- * engines that rely on evaluating expressions at runtime. Nano doesn't support
- * expressions either (yet) but does work with all the basics like loops,
- * filters, imports, and simple if statements. Nano inherits its syntax from
- * the most commonly known template engines like Django, Jinja, Twig, etc.
+ * 	Nano template engine – a very simple (semi) logic-less template engine.
+ * 	This was initially made for playing around with simple prototypes deployed
+ * 	with Deno Deploy, which currently doesn't play very well with template
+ * 	engines that rely on evaluating expressions at runtime. Nano doesn't support
+ * 	expressions either (yet) but does work with all the basics like loops,
+ * 	filters, imports, and simple if statements. Nano inherits its syntax from
+ * 	the most commonly known template engines like Django, Jinja, Twig, etc.
+ * 
+ * 	INB4	
+ * 	[?] function(syntax) for filters
+ * 	[?] expressions: == != >, >=, <, <=
  *
  */
 
