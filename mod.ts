@@ -4,7 +4,7 @@
  *
  * 	>> SOON
  * 		[ ] {@ include @}
- * 		[ ] use/support function(syntax) for filters
+ * 		[ ] support function(syntax) for filters
  * 		[ ] basic expressions: && || == != >, >=, <, <=
  *
  * */
@@ -100,10 +100,10 @@ export function scan(input: string): Marks {
 
 				if (last_mark.value === 'else') {
 					/**
-					 * if-else exception: first push the else-mark to the stack
-					 * to keep its value and then skip to the next mark (pop).
-					 * the next mark has to be an if statement, otherwise a
-					 * statement mismatch will occur throwing a syntax error
+					 * 	if-else exception: first push the else-mark to the stack
+					 * 	to keep its value and then skip to the next mark (pop).
+					 * 	the next mark has to be an if statement, otherwise a
+					 * 	statement mismatch will occur throwing a syntax error
 					 **/
 
 					output_mark(last_mark);
@@ -166,19 +166,14 @@ export function scan(input: string): Marks {
  *
  * 	|	NODE TYPES
  * 	|		[x] value_text                		<div>hello</div>
- * 	|		[x] value_identifier          		variable.dot.separated *OR* variable['named-key']
- * 	|		[x] expression_value          		{{ variable.dot.separated }} *OR* {{ variable['named-key'] }}
- * 	|		[x] expression_filter         		{{ variable | filter_name }}
- * 	|		[x] expression_conditional    		{{ variable ? 'value_if_true' : 'value_if_false' }}
- * 	|		[ ] expression_logical....    		{{ A or B }} {{ A and B }}
- * 	|		[ ] block_comment             		{# commented #}
- * 	|		[ ] block_if                  		{% if variable_1 %}
+ * 	|		[x] value_variable            		variable.dot.separated *OR* variable['named-key']
+ * 	|		[x] expression_filter         		variable | filter_name
+ * 	|		[x] expression_conditional    		variable ? 'value_if_true' : 'value_if_false'
+ * 	|		[x] expression_logical        		not A or B and C
+ * 	|		[x] block_comment             		{# commented #}
+ * 	|		[x] block_if                  		{% if variable_1 %}
  * 	|		[ ] block_for                 		{% for (num, index) in numbers | unique %}
  * 	|		[ ] block_include             		{@ 'path/to/file.html' @}
- * 	|		[ ] expression_logical_and    		and variable
- * 	|		[ ] expression_logical_or     		or variable
- * 	|		[ ] expression_binary         		is value
- * 	|		[ ] expression_binary_negated 		is not value
  *
  **/
 
