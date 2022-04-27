@@ -91,11 +91,11 @@ export function scan(input: string): Marks {
 
 	for (const token of tokens) {
 		const mark_type = return_mark_type(token);
-		const mark_content = mark_type !== MARK_TYPES[3] ? token.slice(2, -2).trim() : token;
+		const mark_value = mark_type !== MARK_TYPES[3] ? token.slice(2, -2).trim() : token;
 
 		if (mark_type === MARK_TYPES[0]) {
-			if (mark_content.startsWith('end')) {
-				const end_statement_type = mark_content.slice(3); //endif -> if
+			if (mark_value.startsWith('end')) {
+				const end_statement_type = mark_value.slice(3); //endif -> if
 				let last_mark = block_stack.pop();
 
 				if (last_mark.value === 'else') {
@@ -120,10 +120,10 @@ export function scan(input: string): Marks {
 
 				output_mark(last_mark);
 			} else {
-				block_stack.push(new Mark(mark_type, mark_content));
+				block_stack.push(new Mark(mark_type, mark_value));
 			}
 		} else {
-			output_mark(new Mark(mark_type, mark_content));
+			output_mark(new Mark(mark_type, mark_value));
 		}
 	}
 
