@@ -411,14 +411,19 @@ export function parse(marks) {
 	}
 
 	function parse_tag_import(mark) {
-		const filepath = mark.value.split(' ').pop().slice(1, -1);
+		const filepath = mark.value.split(RE_KEYWORD_IMPORT).pop();
+		const filepath_unquoted = filepath.slice(1, -1);
 
-		if (!filepath) {
+		if (!filepath_unquoted) {
 			throw new NanoError('Invalid import path');
 		}
 
+		if (!RE_VARIABLE_IN_QUOTES.test(filepath)) {
+			throw new NanoError('Import path must be in quotes');
+		}
+
 		return new Node(NODE_TYPES[9], {
-			path: filepath
+			path: filepath_unquoted
 		})
 	}
 
