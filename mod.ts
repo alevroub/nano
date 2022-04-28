@@ -414,7 +414,7 @@ export function parse(marks) {
 
 		return new Node(NODE_TYPES[7], {
 			variable: for_variable,
-			index: for_index,
+			index: for_index || null,
 			iterator: parse_expression(iterator),
 			body: parse(mark.marks),
 		});
