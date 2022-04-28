@@ -170,7 +170,7 @@ export function scan(input: string): Marks {
  * 	|		[x] expression_logical        		A or B and C
  * 	|		[x] expression_unary          		not A
  * 	|		[x] block_if                  		{% if variable_1 %}
- * 	|		[ ] block_for                 		{% for num, index in numbers | unique %}
+ * 	|		[x] block_for                 		{% for num, index in numbers | unique %}
  * 	|		[x] block_comment             		{# commented #}
  * 	|		[x] tag_import                		{{ import 'path/to/file.html' }}
  *
