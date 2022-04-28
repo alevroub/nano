@@ -217,6 +217,7 @@ export function parse(marks) {
 	const RE_OPERATOR_LOGICAL = /( not | and | or )/;
 	const RE_OPERATOR_FILTER = / ?\| ?/;
 	const RE_OPERATOR_TERNARY = /[?:]/;
+	const RE_OPERATOR_INDEX = /\, ?/;
 
 	const nodes = [];
 
@@ -394,8 +395,29 @@ export function parse(marks) {
 	}
 
 	function parse_block_for_mark(mark) {
-		const statement_parts = mark.value.split(' ');
-		return new Node(NODE_TYPES[7], mark.value);
+		const statement_parts = mark.value.split(RE_KEYWORD_FOR).filter(v => v);
+
+		if (statement_parts.length !== 2) {
+			throw new NanoError('Invalid for statement')
+		}
+
+		const [variable, iterator] = statement_parts;
+		const variable_parts = variable.split(RE_OPERATOR_INDEX);
+
+		for (const part of variable_parts) {
+			if (!RE_VARIABLE_VALID.test(part)) {
+				throw new NanoError(`Invalid variable name: "${part}"`);
+			}
+		}
+
+		const [for_variable, for_index] = variable_parts;
+
+		return new Node(NODE_TYPES[7], {
+			variable: for_variable,
+			index: for_index,
+			iterator: parse_expression(iterator),
+			body: parse(mark.marks),
+		});
 	}
 
 	function parse_block_mark(mark) {
