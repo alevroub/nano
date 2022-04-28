@@ -12,9 +12,9 @@
  * 	filters, imports, and simple if statements. Nano inherits its syntax from
  * 	the most commonly known template engines like Django, Jinja, Twig, etc.
  * 
- * 	INB4	
+ * 	BACKLOG
  * 	[?] function(syntax) for filters
- * 	[?] expressions: == != >, >=, <, <=
+ * 	[?] binary expressions and groups: == != >, >=, <, <= ( )
  *
  */
 
