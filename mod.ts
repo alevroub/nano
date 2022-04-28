@@ -163,15 +163,16 @@ export function scan(input: string): Marks {
  * 	to the renderer.
  *
  * 	|	NODE TYPES
- * 	|		[x] value_text                		<div>hello</div>
- * 	|		[x] value_variable            		variable.dot.separated  *OR*  variable['named-key']
- * 	|		[x] expression_filter         		variable | filter_name
+ * 	|		[x] value_text                		<div>text</div>
+ * 	|		[x] value_variable            		variable.dot.separated / variable['named-key']
+ * 	|		[x] expression_filter         		variable | filter | names
  * 	|		[x] expression_conditional    		variable ? 'value_if_true' : 'value_if_false'
- * 	|		[x] expression_logical        		not A or B and C
- * 	|		[x] block_comment             		{# commented #}
+ * 	|		[x] expression_logical        		A or B and C
+ * 	|		[x] expression_unary          		not A
  * 	|		[x] block_if                  		{% if variable_1 %}
- * 	|		[ ] block_for                 		{% for (num, index) in numbers | unique %}
- * 	|		[ ] block_include             		{@ 'path/to/file.html' @}
+ * 	|		[ ] block_for                 		{% for num, index in numbers | unique %}
+ * 	|		[x] block_comment             		{# commented #}
+ * 	|		[x] tag_import                		{{ import 'path/to/file.html' }}
  *
  **/
 
@@ -185,7 +186,7 @@ const NODE_TYPES = [
 	'block_if',
 	'block_for',
 	'block_comment',
-	'block_include',
+	'tag_import',
 ];
 
 class Node {
@@ -199,25 +200,23 @@ class Node {
 }
 
 export function parse(marks) {
-	const RE_OPERATOR_FILTER = / ?\| ?/;
-	const RE_OPERATOR_TERNARY = /[?:]/;
-	const RE_OPERATOR_LOGICAL = /( not | and | or )/;
 	const RE_ACCESS_DOT = /\./;
 	const RE_ACCESS_BRACKET = /\[["']|['"]\]/;
-
 	const RE_VARIABLE_EXPRESSION_LIKE = /[\&\|\<\>\+\-\=\!\{\}\,]/;
 	const RE_VARIABLE_IN_QUOTES = /^['"].+?['"]$/;
 	const RE_VARIABLE_BRACKET_NOTATION = /\[['"]/;
 	const RE_VARIABLE_DIGIT = /^-?(\d|\.\d)+$/;
 	const RE_VARIABLE_VALID = /^[^0-9][0-9a-zA-Z_]*$/;
-
 	const RE_METHOD_INVALID = /[\- ]/;
-
-	const RE_KEYWORD_IF = /^if\ /;
-	const RE_KEYWORD_FOR = /^(for)|(in)/;
-	const RE_OPERATOR_AND = /\ (and)\ /;
-	const RE_OPERATOR_OR = /\ (or)\ /;
-	const RE_OPERATOR_NOT = /^(not)\ /;
+	const RE_KEYWORD_IF = /^if /;
+	const RE_KEYWORD_FOR = /^for | in /;
+	const RE_KEYWORD_IMPORT = /^import /;
+	const RE_OPERATOR_NOT = /^not /;
+	const RE_OPERATOR_AND = / and /;
+	const RE_OPERATOR_OR = / or /;
+	const RE_OPERATOR_LOGICAL = /( not | and | or )/;
+	const RE_OPERATOR_FILTER = / ?\| ?/;
+	const RE_OPERATOR_TERNARY = /[?:]/;
 
 	const nodes = [];
 
@@ -411,7 +410,23 @@ export function parse(marks) {
 		throw new NanoError('Invalid block statement');
 	}
 
+	function parse_tag_import(mark) {
+		const filepath = mark.value.split(' ').pop().slice(1, -1);
+
+		if (!filepath) {
+			throw new NanoError('Invalid import path');
+		}
+
+		return new Node(NODE_TYPES[9], {
+			path: filepath
+		})
+	}
+
 	function parse_tag_mark(mark) {
+		if (RE_KEYWORD_IMPORT.test(mark.value)) {
+			return parse_tag_import(mark);
+		}
+
 		return parse_expression(mark.value);
 	}
 
