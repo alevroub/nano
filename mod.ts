@@ -495,9 +495,22 @@ export function parse(marks) {
  * 	nodes -> output
  *
  * 	interpreter that finally renders the nodes in relation
- * 	to the data object
+ * 	to the data object. this function has to be async because
+ * 	Deploy doesn't support readFileSync yet.
  *
  * 	@@TODO: turn into async function
+ *
+  * 	|	NODE TYPES
+ * 	|		[ ] value_text
+ * 	|		[ ] value_variable
+ * 	|		[ ] expression_filter
+ * 	|		[ ] expression_conditional
+ * 	|		[ ] expression_logical
+ * 	|		[ ] expression_unary
+ * 	|		[ ] block_if
+ * 	|		[ ] block_for
+ * 	|		[ ] block_comment
+ * 	|		[ ] tag_import
  *
  * */
 
