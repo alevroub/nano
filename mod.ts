@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Alejandro V. Rojas. All rights reserved. MIT license.
 
 /**
- * 
+ *
  * 	v0.0.2
  *
  * 	Nano template engine – a very simple (semi) logic-less template engine.
@@ -11,7 +11,7 @@
  * 	expressions either (yet) but does work with all the basics like loops,
  * 	filters, imports, and simple if statements. Nano inherits its syntax from
  * 	the most commonly known template engines like Django, Jinja, Twig, etc.
- * 
+ *
  * 	BACKLOG
  * 	[?] function(syntax) for filters
  * 	[?] binary expressions and groups: == != >, >=, <, <= ( )
