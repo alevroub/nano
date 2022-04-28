@@ -96,12 +96,12 @@ export function scan(input: string): Marks {
 
 				if (last_mark.value === 'else') {
 					/**
-					 * 
-					 * 	first push the else-mark to the stack to keep its value 
+					 *
+					 * 	first push the else-mark to the stack to keep its value
 					 * 	nested in the if-block and then skip to the next mark
-					 * 	which has to be an if statement, otherwise a statement 
+					 * 	which has to be an if statement, otherwise a statement
 					 * 	mismatch will occur throwing a syntax error
-					 * 
+					 *
 					 **/
 
 					output_mark(last_mark);
@@ -398,7 +398,7 @@ export function parse(marks) {
 		const statement_parts = mark.value.split(RE_KEYWORD_FOR).filter(v => v);
 
 		if (statement_parts.length !== 2) {
-			throw new NanoError('Invalid for statement')
+			throw new NanoError('Invalid for statement');
 		}
 
 		const [variable, iterator] = statement_parts;
@@ -445,8 +445,8 @@ export function parse(marks) {
 		}
 
 		return new Node(NODE_TYPES[9], {
-			path: filepath_unquoted
-		})
+			path: filepath_unquoted,
+		});
 	}
 
 	function parse_tag_mark(mark) {
