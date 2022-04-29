@@ -113,7 +113,9 @@ export function scan(input: string): Mark[] {
 				 * 	remove some whitespace leftovers from {% for/if %} tags
 				 * */
 				marks[marks.length - 1].value = marks[marks.length - 1].value.replace(/\n/g, '');
-				last_block.marks[last_block.marks.length - 1].value = last_block.marks[last_block.marks.length - 1].value.replace(/\n[\t]?$/, '')
+				last_block.marks[last_block.marks.length - 1].value = last_block.marks[
+					last_block.marks.length - 1
+				].value.replace(/\n[\t]?$/, '');
 
 				output_mark(last_block);
 			} else {
@@ -498,17 +500,17 @@ export function parse(marks: Mark[]): Node[] {
  * */
 
 type InputData = {
-	[key: string]: any
-}
+	[key: string]: any;
+};
 
 type InputMethods = {
 	[key: string]: () => any;
-}
+};
 
 export async function compile(nodes: Node[], input_data: InputData, input_methods: InputMethods): Promise<string> {
 	const compile_options = {
 		show_comments: false,
-		import_path: ''
+		import_path: '',
 	};
 
 	const output: string[] = [];
@@ -552,7 +554,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 		return return_value_filtered(node.value.properties, node.filters);
 	}
 
-	async function compile_expression_conditional(node: Node) : Promise<string> {
+	async function compile_expression_conditional(node: Node): Promise<string> {
 		const test = await compile_node(node.test);
 
 		if (test) {
@@ -562,7 +564,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 		}
 	}
 
-	async function compile_expression_logical(node: Node) : Promise<string> {
+	async function compile_expression_logical(node: Node): Promise<string> {
 		const left = await compile_node(node.left);
 		const right = await compile_node(node.right);
 
@@ -575,7 +577,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 		}
 	}
 
-	async function compile_expression_unary(node: Node) : Promise<string> {
+	async function compile_expression_unary(node: Node): Promise<string> {
 		const value = compile_node(node.value);
 
 		if (node.operator === 'not') {
@@ -583,7 +585,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 		}
 	}
 
-	async function compile_block_if(node: Node) : Promise<string> {
+	async function compile_block_if(node: Node): Promise<string> {
 		const block_output: string[] = [];
 		const test = await compile_node(node.test);
 
@@ -636,13 +638,15 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 				block_output.push(await compile(node.body, block_data, input_methods));
 			}
 		} else {
-			throw new NanoError(`Variable "${node.iterator.properties[node.iterator.properties.length - 1]}" is not iterable`)
+			throw new NanoError(
+				`Variable "${node.iterator.properties[node.iterator.properties.length - 1]}" is not iterable`
+			);
 		}
 
 		return block_output.join('');
 	}
 
-	async function compile_block_comment(node: Node) : Promise<string> {
+	async function compile_block_comment(node: Node): Promise<string> {
 		if (compile_options.show_comments) {
 			return `<!-- ${node.value} -->`;
 		}
@@ -650,12 +654,12 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 		return '';
 	}
 
-	async function compile_tag_import(node: Node) : Promise<string> {
+	async function compile_tag_import(node: Node): Promise<string> {
 		const import_file = await Deno.readTextFile(node.path);
 		return compile(parse(scan(import_file)), input_data, input_methods);
 	}
 
-	async function compile_node(node) : string {
+	async function compile_node(node): string {
 		if (node.type === NODE_TYPES[0]) {
 			return compile_value_text(node);
 		}
