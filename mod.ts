@@ -529,25 +529,68 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 	function return_value(properties: string[]): any {
 		return properties.reduce((parent: any, property: string) => {
 			if (parent[property] === undefined) {
-				throw new NanoError(`Variable ${property} does not exist`);
+				throw new NanoError(`Variable "${property}" does not exist`);
 			}
 
 			return parent[property];
-		}, data);
+		}, input_data);
+	}
+
+	function return_value_filtered(properties: string[], filters: any) {
+		const variable_value = return_value(properties);
+		const filtered_value = filters.reduce((processed_value, filter) => {
+			if (input_methods[filter] === undefined) {
+				throw new NanoError(`Method "${filter}" does not exist`);
+			}
+
+			return input_methods[filter](processed_value);
+		}, variable_value);
+
+		return filtered_value;
 	}
 
 	function compile_value_text(node: Node): string {
 		return node.value;
 	}
 
-	function compile_value_variable(node: Node): string {
+	async function compile_value_variable(node: Node): Promise<string> {
 		return return_value(node.properties);
 	}
 
-	function compile_expression_filter(node: Node): string {}
-	function compile_expression_conditional(node: Node) : string {}
-	function compile_expression_logical(node: Node) : string {}
-	function compile_expression_unary(node: Node) : string {}
+	async function compile_expression_filter(node: Node): Promise<string> {
+		return return_value_filtered(node.value.properties, node.filters);
+	}
+
+	async function compile_expression_conditional(node: Node) : Promise<string> {
+		const test = await compile_node(node.test);
+
+		if (test) {
+			return compile_node(node.consequent);
+		} else {
+			return compile_node(node.alternate);
+		}
+	}
+
+	async function compile_expression_logical(node: Node) : Promise<string> {
+		const left = await compile_node(node.left);
+		const right = await compile_node(node.right);
+
+		if (node.operator === 'and') {
+			return left && right;
+		}
+
+		if (node.operator === 'or') {
+			return left || right;
+		}
+	}
+
+	async function compile_expression_unary(node: Node) : Promise<string> {
+		const value = compile_node(node.value);
+
+		if (node.operator === 'not') {
+			return !value;
+		}
+	}
 
 	async function compile_block_if(node: Node) : Promise<string> {}
 
