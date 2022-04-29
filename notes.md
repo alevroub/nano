@@ -1,9 +1,0 @@
-- should have
-	- ternary expressions {{ artist.live ? 'online' : 'offline' }}
-	- {% if __ and __  %}
-	- {% if __ is __  %}
-	- escaped html
-		- {{{ escaped }}}
-		- default functions? 
-			- json, escape, unescape, length, unique
-	- {% for value, index of iterator %}
