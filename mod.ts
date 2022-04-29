@@ -12,9 +12,15 @@
  * 	filters, imports, and simple if statements. Nano inherits its syntax from
  * 	the most commonly known template engines like Django, Jinja, Twig, etc.
  *
- * 	BACKLOG
- * 	[?] function(syntax) for filters
- * 	[?] binary expressions and groups: == != >, >=, <, <= ( )
+ * 	INB4
+ * 	|	should have
+ * 	|		[ ] write proper mark/node types zzZzZzZzz...
+ * 	|
+ * 	|	could have
+ * 	|		[ ] binary expressions and groups: == != >, >=, <, <= ( )
+ * 	|
+ * 	|	won't have
+ * 	|		>>> inline value definitions {{ [1, 2, 2, 3] | unique }}
  *
  */
 
@@ -148,16 +154,17 @@ export function scan(input: string): Mark[] {
  * 	to the renderer.
  *
  * 	|	NODE TYPES
- * 	|		[x] value_text                		<div>text</div>
- * 	|		[x] value_variable            		variable.dot.separated / variable['named-key']
- * 	|		[x] expression_filter         		variable | filter | names
- * 	|		[x] expression_conditional    		variable ? 'value_if_true' : 'value_if_false'
- * 	|		[x] expression_logical        		A or B and C
- * 	|		[x] expression_unary          		not A
- * 	|		[x] block_if                  		{% if variable_1 and/or/not variable_2 %}
- * 	|		[x] block_for                 		{% for num, index in numbers | unique %}	/
- * 	|		[x] block_comment             		{# multi-line comment #}
- * 	|		[x] tag_import                		{{ import 'path/to/file.html' }}
+ *		|	–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+ *		|	value_text            		<div>text</div>
+ *		|	value_variable        		variable.dot.separated / variable['named-key']
+ *		|	expression_filter     		variable | filter | names
+ *		|	expression_conditional		variable ? 'value_if_true' : 'value_if_false'
+ *		|	expression_logical    		A or B and C
+ *		|	expression_unary      		not A
+ *		|	block_if              		{% if variable_1 and/or/not variable_2 %}
+ *		|	block_for             		{% for num, index in numbers | unique %}
+ *		|	block_comment         		{# multi-line comment #}
+ *		|	tag_import            		{{ import 'path/to/file.html' }}
  *
  **/
 
@@ -293,18 +300,10 @@ export function parse(marks: Mark[]): Node[] {
 
 	function parse_expression_logical(expression_string: string): Node {
 		/**
-		 *
-		 * 	only logical expressions for now
-		 *
-		 * 	| 	NOT 3
-		 * 	| 	AND 2
-		 * 	| 	OR  1
-		 * 	|
 		 * 	|	A or B and C      	-->	A or (B and C)
 		 * 	|	A and B or C and D 	-->	(A and B) or (C and D)
 		 * 	|	A and B and C or D 	-->	((A and B) and C) or D
 		 * 	|	not A and B or C    	-->	((not A) and B) or C
-		 *
 		 * */
 
 		const split_or = expression_string.split(RE_OPERATOR_OR);
