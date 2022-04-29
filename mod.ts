@@ -616,8 +616,32 @@ export async function compile(nodes: Node[], data: any): Promise<string> {
 			return compile_expression_filter(node);
 		}
 
+		if (node.type === NODE_TYPES[3]) {
+			return compile_expression_conditional(node);
+		}
+
+		if (node.type === NODE_TYPES[4]) {
+			return compile_expression_logical(node);
+		}
+
+		if (node.type === NODE_TYPES[5]) {
+			return compile_expression_unary(node);
+		}
+
+		if (node.type === NODE_TYPES[6]) {
+			return compile_block_if(node);
+		}
+
 		if (node.type === NODE_TYPES[7]) {
 			return compile_block_for(node);
+		}
+
+		if (node.type === NODE_TYPES[8]) {
+			return compile_block_comment(node);
+		}
+
+		if (node.type === NODE_TYPES[9]) {
+			return compile_tag_import(node);
 		}
 	}
 
