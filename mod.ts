@@ -41,12 +41,6 @@ class NanoError extends Error {
 	public name = 'NanoSyntaxError';
 }
 
-// type Mark = {
-// 	type: string;
-// 	value: string;
-// 	marks?: Array<Mark>;
-// };
-
 // type Node = {
 // 	type: string;
 // };
@@ -63,26 +57,28 @@ const MARK_TYPES = [
 	'comment', 
 	'text'
 ];
+type Token = string;
 
 class Mark {
-	constructor(type, value) {
+	type: string;
+	value: string;
+	marks: Mark[];
+	constructor(type: string, value: string) {
 		this.type = type;
 		this.value = value;
 
-		if (type === MARK_TYPES[0]) {
-			this.marks = [];
-		}
+		this.marks = [];
 	}
 }
 
-export function scan(input: string): Marks {
+export function scan(input: string): Mark[] {
 	const RE_BLOCK = /^{%.*?%}$/;
 	const RE_TAG = /^{{.*?}}$/;
 	const RE_COMMENT = /^{#[^]*?#}$/;
 	const RE_ALL = /({%.*?%}|{{.*?}}|{#[^]*?#})/;
 
-	const marks = [];
-	const block_stack = [];
+	const marks: Mark[] = [];
+	const block_stack: Mark[] = [];
 	const tokens = input.split(RE_ALL).filter(v => v);
 
 	for (const token of tokens) {
@@ -92,9 +88,9 @@ export function scan(input: string): Marks {
 		if (mark_type === MARK_TYPES[0]) {
 			if (mark_value.startsWith('end')) {
 				const end_statement_type = mark_value.slice(3); //endif -> if
-				let last_mark = block_stack.pop();
+				let last_mark = block_stack.pop() as Mark;
 
-				if (last_mark.value === 'else') {
+				if (last_mark && last_mark.value === 'else') {
 					/**
 					 *
 					 * 	first push the else-mark to the stack to keep its value
@@ -105,7 +101,7 @@ export function scan(input: string): Marks {
 					 **/
 
 					output_mark(last_mark);
-					last_mark = block_stack.pop();
+					last_mark = block_stack.pop() as Mark;
 				}
 
 				if (!last_mark) {
@@ -129,7 +125,7 @@ export function scan(input: string): Marks {
 		throw new NanoError('Missing closing tag');
 	}
 
-	function output_mark(mark) {
+	function output_mark(mark: Mark) {
 		if (block_stack.length > 0) {
 			block_stack[block_stack.length - 1].marks.push(mark);
 		} else {
@@ -137,7 +133,7 @@ export function scan(input: string): Marks {
 		}
 	}
 
-	function return_mark_type(token) {
+	function return_mark_type(token: Token) {
 		if (RE_BLOCK.test(token)) {
 			return MARK_TYPES[0];
 		} else if (RE_TAG.test(token)) {
