@@ -20,7 +20,7 @@
  * 	|		[ ] binary expressions and groups: == != >, >=, <, <= ( )
  * 	|
  * 	|	won't have
- * 	|		>>> inline value definitions {{ [1, 2, 2, 3] | unique }}
+ * 	|		[x] inline value definitions {{ [1, 2, 2, 3] | unique }}
  *
  */
 
