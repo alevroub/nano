@@ -186,7 +186,9 @@ const NODE_TYPES = [
 ];
 
 class Node {
-	constructor(type, properties) {
+	[key: string]: any;
+
+	constructor(type: string, properties: any) {
 		this.type = type;
 
 		for (const key in properties) {
@@ -195,7 +197,7 @@ class Node {
 	}
 }
 
-export function parse(marks) {
+export function parse(marks: Mark[]): Node[] {
 	const RE_ACCESS_DOT = /\./;
 	const RE_ACCESS_BRACKET = /\[["']|['"]\]/;
 	const RE_VARIABLE_EXPRESSION_LIKE = /[\&\|\<\>\+\-\=\!\{\}\,]/;
@@ -217,7 +219,7 @@ export function parse(marks) {
 
 	const nodes = [];
 
-	function parse_value(value_string: string) {
+	function parse_value(value_string: string): Node {
 		if (RE_VARIABLE_IN_QUOTES.test(value_string)) {
 			return new Node(NODE_TYPES[0], {
 				value: value_string.slice(1, -1),
@@ -230,7 +232,7 @@ export function parse(marks) {
 			}
 
 			const variable_parts = value_string.split(RE_ACCESS_BRACKET);
-			const variable_root = variable_parts.shift();
+			const variable_root = variable_parts.shift() as string;
 			const variables_nested = variable_parts.filter(v => v);
 
 			/**
@@ -263,9 +265,9 @@ export function parse(marks) {
 		});
 	}
 
-	function parse_expression_filter(expression_string: string) {
+	function parse_expression_filter(expression_string: string): Node {
 		const statement_parts = expression_string.split(RE_OPERATOR_FILTER).map(v => v.trim());
-		const variable = statement_parts.shift();
+		const variable = statement_parts.shift() as string;
 		const filters = statement_parts.filter(v => v);
 
 		if (filters.length === 0) {
@@ -284,7 +286,7 @@ export function parse(marks) {
 		});
 	}
 
-	function parse_expression_conditional(expression_string: string) {
+	function parse_expression_conditional(expression_string: string): Node {
 		const statement_parts = expression_string.split(RE_OPERATOR_TERNARY).map(v => v.trim());
 
 		if (statement_parts.length < 3) {
@@ -300,7 +302,7 @@ export function parse(marks) {
 		});
 	}
 
-	function parse_expression_logical(expression_string: string) {
+	function parse_expression_logical(expression_string: string): Node {
 		/**
 		 *
 		 * 	only logical expressions for now
@@ -354,7 +356,7 @@ export function parse(marks) {
 		return parse_value(expression_string);
 	}
 
-	function parse_expression(expression_string: string) {
+	function parse_expression(expression_string: string): Node {
 		if (RE_OPERATOR_TERNARY.test(expression_string)) {
 			return parse_expression_conditional(expression_string);
 		}
@@ -370,13 +372,19 @@ export function parse(marks) {
 		return parse_value(expression_string);
 	}
 
-	function parse_block_if_mark(mark) {
+	function parse_block_if_mark(mark: Mark): Node {
 		const [test] = mark.value.split(RE_KEYWORD_IF).filter(v => v);
 
 		function return_else_marks() {
 			const last_mark = mark.marks[mark.marks.length - 1];
 			const has_else_block = last_mark && last_mark.type === 'block' && last_mark.value === 'else';
-			return has_else_block ? mark.marks.pop().marks : [];
+
+			if (has_else_block) {
+				const else_mark = mark.marks.pop() as Mark;
+				return else_mark.marks;
+			} else {
+				return [];
+			}
 		}
 
 		const else_marks = return_else_marks();
@@ -390,7 +398,7 @@ export function parse(marks) {
 		});
 	}
 
-	function parse_block_for_mark(mark) {
+	function parse_block_for_mark(mark: Mark): Node {
 		const statement_parts = mark.value.split(RE_KEYWORD_FOR).filter(v => v);
 
 		if (statement_parts.length !== 2) {
