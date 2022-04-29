@@ -156,9 +156,9 @@ export function scan(input: string): Mark[] {
  * 	|		[x] expression_conditional    		variable ? 'value_if_true' : 'value_if_false'
  * 	|		[x] expression_logical        		A or B and C
  * 	|		[x] expression_unary          		not A
- * 	|		[x] block_if                  		{% if variable_1 %}
- * 	|		[x] block_for                 		{% for num, index in numbers | unique %}
- * 	|		[x] block_comment             		{# commented #}
+ * 	|		[x] block_if                  		{% if variable_1 and/or/not variable_2 %}
+ * 	|		[x] block_for                 		{% for num, index in numbers | unique %}	/
+ * 	|		[x] block_comment             		{# multi-line comment #}
  * 	|		[x] tag_import                		{{ import 'path/to/file.html' }}
  *
  **/
