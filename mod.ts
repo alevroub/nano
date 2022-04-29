@@ -421,7 +421,7 @@ export function parse(marks: Mark[]): Node[] {
 		});
 	}
 
-	function parse_block_mark(mark) {
+	function parse_block_mark(mark: Mark): Node {
 		if (mark.value.startsWith('if ')) {
 			return parse_block_if_mark(mark);
 		}
@@ -433,9 +433,9 @@ export function parse(marks: Mark[]): Node[] {
 		throw new NanoError('Invalid block statement');
 	}
 
-	function parse_tag_import(mark) {
-		const filepath = mark.value.split(RE_KEYWORD_IMPORT).pop();
-		const filepath_unquoted = filepath.slice(1, -1);
+	function parse_tag_import(mark: Mark): Node {
+		const filepath = mark.value.split(RE_KEYWORD_IMPORT).pop() as string;
+		const filepath_unquoted: string = filepath.slice(1, -1);
 
 		if (!filepath_unquoted) {
 			throw new NanoError('Invalid import path');
@@ -450,7 +450,7 @@ export function parse(marks: Mark[]): Node[] {
 		});
 	}
 
-	function parse_tag_mark(mark) {
+	function parse_tag_mark(mark: Mark): Node {
 		if (RE_KEYWORD_IMPORT.test(mark.value)) {
 			return parse_tag_import(mark);
 		}
@@ -458,13 +458,13 @@ export function parse(marks: Mark[]): Node[] {
 		return parse_expression(mark.value);
 	}
 
-	function parse_comment_mark(mark) {
+	function parse_comment_mark(mark: Mark): Node {
 		return new Node(NODE_TYPES[8], {
 			value: mark.value,
 		});
 	}
 
-	function parse_text_mark(mark) {
+	function parse_text_mark(mark: Mark): Node {
 		return new Node(NODE_TYPES[0], {
 			value: mark.value,
 		});
