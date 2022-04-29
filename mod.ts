@@ -637,7 +637,11 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 	}
 
 	async function compile_block_comment(node: Node) : Promise<string> {
-		return (compile_options.show_comments) ? `<!-- ${node.value} -->` : '';
+		if (compile_options.show_comments) {
+			return `<!-- ${node.value} -->`;
+		}
+
+		return '';
 	}
 
 	async function compile_tag_import(node: Node) : Promise<string> {
