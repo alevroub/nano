@@ -49,15 +49,6 @@ class NanoError extends Error {
 	public name = 'NanoSyntaxError';
 }
 
-const MARK_TYPES = [
-	'block', 
-	'tag', 
-	'comment', 
-	'text'
-];
-
-type Token = string;
-
 class Mark {
 	type: string;
 	value: string;
@@ -69,6 +60,15 @@ class Mark {
 		this.marks = [];
 	}
 }
+
+type Token = string;
+
+const MARK_TYPES = [
+	'block',
+	'tag',
+	'comment',
+	'text'
+];
 
 export function scan(input: string): Mark[] {
 	const RE_BLOCK = /^{%.*?%}$/;
@@ -178,6 +178,18 @@ export function scan(input: string): Mark[] {
  *
  **/
 
+class Node {
+	[key: string]: any;
+
+	constructor(type: string, properties: any) {
+		this.type = type;
+
+		for (const key in properties) {
+			this[key] = properties[key];
+		}
+	}
+}
+
 const NODE_TYPES = [
 	'value_text',
 	'value_variable',
@@ -190,18 +202,6 @@ const NODE_TYPES = [
 	'block_comment',
 	'tag_import',
 ];
-
-class Node {
-	[key: string]: any;
-
-	constructor(type: string, properties: any) {
-		this.type = type;
-
-		for (const key in properties) {
-			this[key] = properties[key];
-		}
-	}
-}
 
 export function parse(marks: Mark[]): Node[] {
 	const RE_ACCESS_DOT = /\./;
