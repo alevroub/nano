@@ -41,32 +41,23 @@ class NanoError extends Error {
 	public name = 'NanoSyntaxError';
 }
 
-// type Node = {
-// 	type: string;
-// };
-
-// type ExpressionLogicalNode & Node {
-// 	left: string;
-// 	right: string;
-// 	operator: string;
-// }
-
 const MARK_TYPES = [
 	'block', 
 	'tag', 
 	'comment', 
 	'text'
 ];
+
 type Token = string;
 
 class Mark {
 	type: string;
 	value: string;
 	marks: Mark[];
+
 	constructor(type: string, value: string) {
 		this.type = type;
 		this.value = value;
-
 		this.marks = [];
 	}
 }
