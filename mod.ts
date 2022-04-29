@@ -703,3 +703,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 
 	return output.join('');
 }
+
+export async function render(input, input_data, input_methods) {
+	return compile(parse(scan(input)), input_data, input_methods);
+}
