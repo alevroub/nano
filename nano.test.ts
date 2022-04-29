@@ -2,41 +2,38 @@ import { scan, parse, compile } from './mod.ts';
 
 const TEST_METHODS = {
 	upper: value => value.toString().toUpperCase(),
-	json: value => JSON.stringify(value, null, 3),
+	more_than_three: value => value > 3,
 };
 
 const TEST_DATA = {
-	test: 'hello_from_data',
-	// fruits: ['banana', 'apple', 'pear']
-	fruits: { a: 'banana', b: 'apple', c: 'pear' },
+	'000_technically_invalid': 'lol',
+	string: 'hello_from_data',
+	number: 200,
+	an_array: ['banana', 'apple', 'pear'],
+	an_object: { a: 'banana', b: 'apple', c: 'pear' },
 };
 
+// const TEST_INPUT = `{{ 3here ? 'yes' : 'no' }}`;
+
 const TEST_INPUT = `
-	{{ import 'index.html' }}
-	<div>test</div>
+	<div>Hei</div>
+	<div>{{ number }}</div>
+	<div>{{ an_object.a }}</div>
+	<div>{{ "Literally this string" }}</div>
+	{% for key, value in an_object %}
+		<section>
+			<div>{{ key }}: {{ value }}</div>
+		</section>
+	{% endfor %}
+
+	{% if number %}
+		<div>{{ number}}</div>
+	{% endif %}
+
+	{% for item in an_array %}
+		<div>{{ item }}</div>
+	{% endfor %}
 `;
-
-// const TEST_INPUT = [
-// 	'<div>Hei</div>',
-// 	'<div>{{ 100 }}</div>',
-// 	'<div>{{ "Literally" }}</div>',
-// 	'{#',
-// 		'just a comment',
-// 	'#}',
-// 	'<div>{{ dot.separated }}</div>',
-
-// 	'{% if non_existent %}',
-// 		'<div>IF</div>',
-// 	'{% else %}',
-// 		'<div>ELSE</div>',
-// 	'{% endif %}',
-
-// 	'{% for a in AA %}',
-// 		'{% for b in BB %}',
-// 			'<div>{{ inside_b }}</div>',
-// 		'{% endfor %}',
-// 	'{% endfor %}',
-// ].join('')
 
 try {
 	console.time('RENDER');
@@ -45,6 +42,7 @@ try {
 	const parsed = parse(scanned);
 	const compiled = await compile(parsed, TEST_DATA, TEST_METHODS);
 
+	// console.log(scanned);
 	console.log(compiled);
 	console.timeEnd('RENDER');
 } catch (error) {
