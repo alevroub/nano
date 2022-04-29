@@ -488,7 +488,7 @@ export function parse(marks: Mark[]): Node[] {
  *
  * 	interpreter that finally renders the nodes in relation
  * 	to the data object. this function has to be async because
- * 	Deploy doesn't support readFileSync yet.
+ * 	Deno Deploy doesn't support readFileSync yet.
  *
  * 	@@TODO: turn into async function
  *
@@ -506,7 +506,15 @@ export function parse(marks: Mark[]): Node[] {
  *
  * */
 
-export async function compile(nodes: Node[], data: any): Promise<string> {
+type InputData = {
+	[key: string]: any
+}
+
+type InputMethods = {
+	[key: string]: () => any;
+}
+
+export async function compile(nodes: Node[], input_data: InputData, input_methods: InputMethods): Promise<string> {
 	const compile_options = {
 		show_comments: false,
 		import_path: ''
@@ -553,7 +561,7 @@ export async function compile(nodes: Node[], data: any): Promise<string> {
 			const [for_key, for_value] = node.variables;
 
 			for (const [loop_index, loop_key] of Object.keys(loop_iterator).entries()) {
-				const block_data = { ...data };
+				const block_data = { ...input_data };
 
 				if (for_value) {
 					block_data[for_key] = loop_key;
@@ -562,13 +570,13 @@ export async function compile(nodes: Node[], data: any): Promise<string> {
 					block_data[for_key] = loop_iterator[loop_key];
 				}
 
-				block_output.push(await compile(node.body, block_data));
+				block_output.push(await compile(node.body, block_data, input_methods));
 			}
 		} else if (iterator_type === 'array') {
 			const [for_variable, for_index] = node.variables;
 
 			for (const [loop_index, loop_data] of loop_iterator.entries()) {
-				const block_data = { ...data };
+				const block_data = { ...input_data };
 
 				block_data[for_variable] = loop_data;
 
@@ -576,7 +584,7 @@ export async function compile(nodes: Node[], data: any): Promise<string> {
 					block_data[for_index] = loop_index;
 				}
 
-				block_output.push(await compile(node.body, block_data));
+				block_output.push(await compile(node.body, block_data, input_methods));
 			}
 		} else {
 			throw new NanoError(`Variable "${node.iterator.properties[node.iterator.properties.length - 1]}" is not iterable`)
@@ -591,7 +599,7 @@ export async function compile(nodes: Node[], data: any): Promise<string> {
 
 	async function compile_tag_import(node: Node) : Promise<string> {
 		const import_file = await Deno.readTextFile(node.path);
-		return compile(parse(scan(import_file)), data);
+		return compile(parse(scan(import_file)), input_data, input_methods);
 	}
 
 	async function compile_node(node) : string {
