@@ -490,20 +490,6 @@ export function parse(marks: Mark[]): Node[] {
  * 	to the data object. this function has to be async because
  * 	Deno Deploy doesn't support readFileSync yet.
  *
- * 	@@TODO: turn into async function
- *
- * 	|	NODE TYPES
- * 	|		[x] value_text
- * 	|		[x] value_variable
- * 	|		[ ] expression_filter
- * 	|		[ ] expression_conditional
- * 	|		[ ] expression_logical
- * 	|		[ ] expression_unary
- * 	|		[ ] block_if
- * 	|		[x] block_for
- * 	|		[x] block_comment
- * 	|		[ ] tag_import
- *
  * */
 
 type InputData = {
@@ -549,7 +535,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 		return filtered_value;
 	}
 
-	function compile_value_text(node: Node): string {
+	async function compile_value_text(node: Node): Promise<string> {
 		return node.value;
 	}
 
