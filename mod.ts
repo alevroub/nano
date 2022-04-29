@@ -79,31 +79,29 @@ export function scan(input: string): Mark[] {
 		if (mark_type === MARK_TYPES[0]) {
 			if (mark_value.startsWith('end')) {
 				const end_statement_type = mark_value.slice(3); //endif -> if
-				let last_mark = block_stack.pop() as Mark;
+				let last_block = block_stack.pop() as Mark;
 
-				if (last_mark && last_mark.value === 'else') {
+				if (last_block && last_block.value === 'else') {
 					/**
-					 *
 					 * 	first push the else-mark to the stack to keep its value
 					 * 	nested in the if-block and then skip to the next mark
 					 * 	which has to be an if statement, otherwise a statement
 					 * 	mismatch will occur throwing a syntax error
-					 *
 					 **/
 
-					output_mark(last_mark);
-					last_mark = block_stack.pop() as Mark;
+					output_mark(last_block);
+					last_block = block_stack.pop() as Mark;
 				}
 
-				if (!last_mark) {
+				if (!last_block) {
 					throw new NanoError('Too many closing tags');
 				}
 
-				if (!last_mark.value.startsWith(end_statement_type)) {
+				if (!last_block.value.startsWith(end_statement_type)) {
 					throw new NanoError('Invalid closing tag');
 				}
 
-				output_mark(last_mark);
+				output_mark(last_block);
 			} else {
 				block_stack.push(new Mark(mark_type, mark_value));
 			}
