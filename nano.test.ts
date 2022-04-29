@@ -1,4 +1,4 @@
-import { scan, parse, compile } from './mod.ts';
+import { scan, parse, compile, render } from './mod.ts';
 
 const TEST_METHODS = {
 	upper: value => value.toString().toUpperCase(),
@@ -12,8 +12,6 @@ const TEST_DATA = {
 	an_array: ['banana', 'apple', 'pear'],
 	an_object: { a: 'banana', b: 'apple', c: 'pear' },
 };
-
-// const TEST_INPUT = `{{ 3here ? 'yes' : 'no' }}`;
 
 const TEST_INPUT = `
 	<div>Hei</div>
@@ -40,10 +38,12 @@ try {
 
 	const scanned = scan(TEST_INPUT);
 	const parsed = parse(scanned);
-	const compiled = await compile(parsed, TEST_DATA, TEST_METHODS);
+	// const compiled = await compile(parsed, TEST_DATA, TEST_METHODS);
+	const rendered = await render(TEST_INPUT, TEST_DATA, TEST_METHODS);
 
 	// console.log(scanned);
-	console.log(compiled);
+	// console.log(compiled);
+	console.log(rendered);
 	console.timeEnd('RENDER');
 } catch (error) {
 	console.log('%c' + error.message, 'color: red');
