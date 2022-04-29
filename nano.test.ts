@@ -1,22 +1,22 @@
 import { scan, parse, compile } from './mod.ts'
 
-const TEST_DATA = {
-	yo: 'yo_from_data',
-	ye: { dot: { separated: 99999 } },
-	aa: ['a', 'b', 'c'],
-	bb: ['uno', 'dos']
+const TEST_METHODS = {
+	upper: value => value.toString().toUpperCase(),
+	json: value => JSON.stringify(value, null, 3)
 }
 
-const TEST_INPUT = [
-	'{% if a   %}',
-	'"AAA"',
-	'{{ eee }}',
-	'"AAA"',
-	'{% else %}',
-	'{{ BBB }}',
-	'{% endif %}',
-].join('')
+const TEST_DATA = {
+	test: 'hello_from_data',
+	// fruits: ['banana', 'apple', 'pear']
+	fruits: { a: 'banana', b: 'apple', c: 'pear' }
+}
 
+const TEST_INPUT = `
+	<div>test</div>
+	{% for key, value in fruits %}
+		<div>{{ key }}: {{ value }}</div>
+	{% endfor %}
+`
 
 // const TEST_INPUT = [
 // 	'<div>Hei</div>',
@@ -42,7 +42,8 @@ const TEST_INPUT = [
 
 try {
 	// console.log(scan(TEST_INPUT));
-	console.log(parse(scan(TEST_INPUT), TEST_DATA));
+	// console.log(parse(scan(TEST_INPUT)));
+	console.log(await compile(parse(scan(TEST_INPUT)), TEST_DATA, TEST_METHODS));
 	// console.log(JSON.stringify(parse(scan(TEST_INPUT)), null, 2))
 } catch(error) {
 	console.log('%c' + error.message, 'color: red')
