@@ -79,7 +79,7 @@ export function scan(input: string): Mark[] {
 
 	const marks: Mark[] = [];
 	const block_stack: Mark[] = [];
-	const tokens = input.split(RE_ALL).filter(v => v);
+	const tokens: Token[] = input.split(RE_ALL).filter(v => v);
 
 	for (const token of tokens) {
 		const mark_type = return_mark_type(token);
