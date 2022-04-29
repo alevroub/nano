@@ -501,18 +501,126 @@ export function parse(marks: Mark[]): Node[] {
  *
  * 	@@TODO: turn into async function
  *
-  * 	|	NODE TYPES
- * 	|		[ ] value_text
- * 	|		[ ] value_variable
+ * 	|	NODE TYPES
+ * 	|		[x] value_text
+ * 	|		[x] value_variable
  * 	|		[ ] expression_filter
  * 	|		[ ] expression_conditional
  * 	|		[ ] expression_logical
  * 	|		[ ] expression_unary
  * 	|		[ ] block_if
- * 	|		[ ] block_for
- * 	|		[ ] block_comment
+ * 	|		[x] block_for
+ * 	|		[x] block_comment
  * 	|		[ ] tag_import
  *
  * */
 
-export function evaluate(nodes, data) {}
+export async function compile(nodes: Node[], data: any): Promise<string> {
+	const compile_options = {
+		show_comments: false,
+		import_path: ''
+	};
+
+	const output: string[] = [];
+
+	function return_type(value: any): string {
+		return Object.prototype.toString.call(value).slice(8, -1).toLowerCase();
+	}
+
+	function return_value(properties: string[]): any {
+		return properties.reduce((parent: any, property: string) => {
+			if (parent[property] === undefined) {
+				throw new NanoError(`Variable ${property} does not exist`);
+			}
+
+			return parent[property];
+		}, data);
+	}
+
+	function compile_value_text(node: Node): string {
+		return node.value;
+	}
+
+	function compile_value_variable(node: Node): string {
+		return return_value(node.properties);
+	}
+
+	function compile_expression_filter(node: Node): string {}
+	function compile_expression_conditional(node: Node) : string {}
+	function compile_expression_logical(node: Node) : string {}
+	function compile_expression_unary(node: Node) : string {}
+
+	async function compile_block_if(node: Node) : Promise<string> {}
+
+	async function compile_block_for(node: Node): Promise<string> {
+		const block_context: any = {};
+		const block_output: string[] = [];
+		const loop_iterator = await compile_node(node.iterator);
+		const iterator_type = return_type(loop_iterator);
+
+		if (iterator_type === 'object') {
+			const [for_key, for_value] = node.variables;
+
+			for (const [loop_index, loop_key] of Object.keys(loop_iterator).entries()) {
+				const block_data = { ...data };
+
+				if (for_value) {
+					block_data[for_key] = loop_key;
+					block_data[for_value] = loop_iterator[loop_key];
+				} else {
+					block_data[for_key] = loop_iterator[loop_key];
+				}
+
+				block_output.push(await compile(node.body, block_data));
+			}
+		} else if (iterator_type === 'array') {
+			const [for_variable, for_index] = node.variables;
+
+			for (const [loop_index, loop_data] of loop_iterator.entries()) {
+				const block_data = { ...data };
+
+				block_data[for_variable] = loop_data;
+
+				if (for_index) {
+					block_data[for_index] = loop_index;
+				}
+
+				block_output.push(await compile(node.body, block_data));
+			}
+		} else {
+			throw new NanoError(`Variable "${node.iterator.properties[node.iterator.properties.length - 1]}" is not iterable`)
+		}
+
+		return block_output.join('');
+	}
+
+	async function compile_block_comment(node: Node) : Promise<string> {
+		return (compile_options.show_comments) ? `<!-- ${node.value} -->` : '';
+	}
+
+	async function compile_tag_import(node: Node) : Promise<string> {}
+
+	async function compile_node(node) : string {
+		if (node.type === NODE_TYPES[0]) {
+			return compile_value_text(node);
+		}
+
+		if (node.type === NODE_TYPES[1]) {
+			return compile_value_variable(node);
+		}
+
+		if (node.type === NODE_TYPES[2]) {
+			return compile_expression_filter(node);
+		}
+
+		if (node.type === NODE_TYPES[7]) {
+			return compile_block_for(node);
+		}
+	}
+
+	for (const node of nodes) {
+		output.push(await compile_node(node));
+	}
+
+	return output.join('');
+}
