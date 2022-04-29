@@ -598,7 +598,10 @@ export async function compile(nodes: Node[], data: any): Promise<string> {
 		return (compile_options.show_comments) ? `<!-- ${node.value} -->` : '';
 	}
 
-	async function compile_tag_import(node: Node) : Promise<string> {}
+	async function compile_tag_import(node: Node) : Promise<string> {
+		const import_file = await Deno.readTextFile(node.path);
+		return compile(parse(scan(import_file)), data);
+	}
 
 	async function compile_node(node) : string {
 		if (node.type === NODE_TYPES[0]) {
