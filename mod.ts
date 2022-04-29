@@ -195,7 +195,7 @@ export function parse(marks: Mark[]): Node[] {
 	const RE_VARIABLE_IN_QUOTES = /^['"].+?['"]$/;
 	const RE_VARIABLE_BRACKET_NOTATION = /\[['"]/;
 	const RE_VARIABLE_DIGIT = /^-?(\d|\.\d)+$/;
-	const RE_VARIABLE_VALID = /^[^0-9][0-9a-zA-Z_]*$/;
+	const RE_VARIABLE_VALID = /^[0-9a-zA-Z_]*$/;
 	const RE_METHOD_INVALID = /[\- ]/;
 	const RE_KEYWORD_IF = /^if /;
 	const RE_KEYWORD_FOR = /^for | in /;
