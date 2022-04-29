@@ -7,12 +7,13 @@
  * 	Nano template engine – a very simple (semi) logic-less template engine.
  * 	This was initially made for playing around with simple prototypes deployed
  * 	with Deno Deploy, which currently doesn't play very well with template
- * 	engines that rely on evaluating expressions at runtime. Nano doesn't support
- * 	expressions either (yet) but does work with all the basics like loops,
- * 	filters, imports, and simple if statements. Nano inherits its syntax from
- * 	the most commonly known template engines like Django, Jinja, Twig, etc.
+ * 	engines that rely on evaluating expressions at runtime. Nano only supports
+ * 	logical expressions with existing variables, as well all the basics like
+ * 	if/for statements, nested loops, filters, and imports. Nano inherits
+ * 	its syntax from the most commonly known template engines like Django, etc.
  *
- * 	INB4
+ * 	|	INB4
+ * 	|
  * 	|	should have
  * 	|		[ ] write proper mark/node types zzZzZzZzz...
  * 	|
@@ -36,10 +37,11 @@
  * 	next step when the marks are used to create nodes.
  *
  *		|	MARK TYPES
- *		|		0 - BLOCK   	{% if/else/for %}
- *		|		1 - VARIABLE	{{ variable }}
- *		|		2 - COMMENT 	{# comment #}
- *		|		3 - TEXT    	<div>text</div>
+ * 	|	––––––––––––––––––––––––––––––––––
+ *		|	0	BLOCK   		{% if/else/for %}
+ *		|	1	VARIABLE		{{ variable }}
+ *		|	2	COMMENT 		{# comment #}
+ *		|	3	TEXT    		<div>text</div>
  *
  **/
 
@@ -160,17 +162,17 @@ export function scan(input: string): Mark[] {
  * 	to the renderer.
  *
  * 	|	NODE TYPES
- *		|	–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
- *		|	value_text            		<div>text</div>
- *		|	value_variable        		variable.dot.separated / variable['named-key']
- *		|	expression_filter     		variable | filter | names
- *		|	expression_conditional		variable ? 'value_if_true' : 'value_if_false'
- *		|	expression_logical    		A or B and C
- *		|	expression_unary      		not A
- *		|	block_if              		{% if variable_1 and/or/not variable_2 %}
- *		|	block_for             		{% for num, index in numbers | unique %}
- *		|	block_comment         		{# multi-line comment #}
- *		|	tag_import            		{{ import 'path/to/file.html' }}
+ *		|	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+ *		|	0	value_text            		<div>text</div>
+ *		|	1	value_variable        		variable.dot.separated / variable['named-key']
+ *		|	2	expression_filter     		variable | filter | names
+ *		|	3	expression_conditional		variable ? 'value_if_true' : 'value_if_false'
+ *		|	4	expression_logical    		A or B and C
+ *		|	5	expression_unary      		not A
+ *		|	6	block_if              		{% if variable_1 and/or/not variable_2 %}
+ *		|	7	block_for             		{% for num, index in numbers | unique %}
+ *		|	8	block_comment         		{# multi-line comment #}
+ *		|	9	tag_import            		{{ import 'path/to/file.html' }}
  *
  **/
 
