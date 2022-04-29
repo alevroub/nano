@@ -107,6 +107,12 @@ export function scan(input: string): Mark[] {
 					throw new NanoError('Invalid closing tag');
 				}
 
+				/**
+				 * 	remove some whitespace leftovers from {% for/if %} tags
+				 * */
+				marks[marks.length - 1].value = marks[marks.length - 1].value.replace(/\n/g, '');
+				last_block.marks[last_block.marks.length - 1].value = last_block.marks[last_block.marks.length - 1].value.replace(/\n[\t]?$/, '')
+
 				output_mark(last_block);
 			} else {
 				block_stack.push(new Mark(mark_type, mark_value));
