@@ -21,7 +21,7 @@
  * 	|		[ ] binary expressions and groups: == != >, >=, <, <= ( )
  * 	|
  * 	|	won't have
- * 	|		[x] inline value definitions {{ [1, 2, 2, 3] | unique }}
+ * 	|		[x] inline variable definitions {{ [1, 2, 2, 3] | unique }}
  *
  */
 
