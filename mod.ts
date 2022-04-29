@@ -203,7 +203,7 @@ export function parse(marks: Mark[]): Node[] {
 	const RE_OPERATOR_NOT = /^not /;
 	const RE_OPERATOR_AND = / and /;
 	const RE_OPERATOR_OR = / or /;
-	const RE_OPERATOR_LOGICAL = /( not | and | or )/;
+	const RE_OPERATOR_LOGICAL = /not |( and | or )/;
 	const RE_OPERATOR_FILTER = / ?\| ?/;
 	const RE_OPERATOR_TERNARY = /[?:]/;
 	const RE_OPERATOR_INDEX = /\, ?/;
@@ -311,35 +311,35 @@ export function parse(marks: Mark[]): Node[] {
 
 		const split_or = expression_string.split(RE_OPERATOR_OR);
 
-		if (split_or.length === 3) {
-			const [left, operator, right] = split_or;
+		if (split_or.length === 2) {
+			const [left, right] = split_or;
 
 			return new Node(NODE_TYPES[4], {
+				operator: 'or',
 				left: parse_expression_logical(left),
-				operator,
 				right: parse_expression_logical(right),
 			});
 		}
 
 		const split_and = expression_string.split(RE_OPERATOR_AND);
 
-		if (split_and.length === 3) {
-			const [left, operator, right] = split_and;
+		if (split_and.length === 2) {
+			const [left, right] = split_and;
 
 			return new Node(NODE_TYPES[4], {
+				operator: 'and',
 				left: parse_expression_logical(left),
-				operator,
 				right: parse_expression_logical(right),
 			});
 		}
 
-		const split_not = expression_string.split(RE_OPERATOR_NOT).filter(v => v);
+		const split_not = expression_string.split(RE_OPERATOR_NOT);
 
 		if (split_not.length === 2) {
 			const [operator, value] = split_not;
 
 			return new Node(NODE_TYPES[5], {
-				operator,
+				operator: 'not',
 				value: parse_expression_logical(value),
 			});
 		}
