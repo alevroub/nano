@@ -592,7 +592,22 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 		}
 	}
 
-	async function compile_block_if(node: Node) : Promise<string> {}
+	async function compile_block_if(node: Node) : Promise<string> {
+		const block_output: string[] = [];
+		const test = await compile_node(node.test);
+
+		if (test) {
+			if (node.consequent) {
+				block_output.push(await compile(node.consequent, input_data, input_methods));
+			}
+		} else {
+			if (node.alternate) {
+				block_output.push(await compile(node.alternate, input_data, input_methods));
+			}
+		}
+
+		return block_output.join('');
+	}
 
 	async function compile_block_for(node: Node): Promise<string> {
 		const block_context: any = {};
