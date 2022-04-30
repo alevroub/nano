@@ -502,7 +502,7 @@ type InputMethods = {
 type NanoOptions = {
 	show_comments: boolean;
 	import_path: string;
-}
+};
 
 export async function compile(nodes: Node[], input_data: InputData, input_methods?: InputMethods, input_options?: NanoOptions): Promise<string> {
 	const default_options: NanoOptions = { show_comments: false, import_path: '' };
@@ -559,7 +559,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 		}
 	}
 
-	async function compile_expression_logical(node: Node): Promise<boolean|undefined> {
+	async function compile_expression_logical(node: Node): Promise<boolean | undefined> {
 		const left = await compile_node(node.left);
 		const right = await compile_node(node.right);
 
@@ -572,7 +572,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 		}
 	}
 
-	async function compile_expression_unary(node: Node): Promise<boolean|undefined> {
+	async function compile_expression_unary(node: Node): Promise<boolean | undefined> {
 		const value = compile_node(node.value);
 
 		if (node.operator === 'not') {
