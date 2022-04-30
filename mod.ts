@@ -496,14 +496,17 @@ type InputData = {
 };
 
 type InputMethods = {
-	[key: string]: () => any;
+	[key: string]: (...args: any[]) => any;
 };
 
-export async function compile(nodes: Node[], input_data: InputData, input_methods: InputMethods): Promise<string> {
-	const compile_options = {
-		show_comments: false,
-		import_path: '',
-	};
+type NanoOptions = {
+	show_comments: boolean;
+	import_path: string;
+}
+
+export async function compile(nodes: Node[], input_data: InputData, input_methods?: InputMethods, input_options?: NanoOptions): Promise<string> {
+	const default_options: NanoOptions = { show_comments: false, import_path: '' };
+	const compile_options: NanoOptions = Object.assign(default_options, input_options);
 
 	const output: string[] = [];
 
@@ -513,22 +516,22 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 
 	function return_value(properties: string[]): any {
 		return properties.reduce((parent: any, property: string) => {
-			if (parent[property] === undefined) {
+			if (parent[property]) {
+				return parent[property];
+			} else {
 				throw new NanoError(`Variable "${property}" does not exist`);
 			}
-
-			return parent[property];
 		}, input_data);
 	}
 
-	function return_value_filtered(properties: string[], filters: any) {
+	function return_value_filtered(properties: string[], filters: InputMethods): any {
 		const variable_value = return_value(properties);
-		const filtered_value = filters.reduce((processed_value, filter) => {
-			if (input_methods[filter] === undefined) {
+		const filtered_value = filters.reduce((processed_value: any, filter: string) => {
+			if (input_methods && input_methods[filter]) {
+				return input_methods[filter](processed_value);
+			} else {
 				throw new NanoError(`Method "${filter}" does not exist`);
 			}
-
-			return input_methods[filter](processed_value);
 		}, variable_value);
 
 		return filtered_value;
@@ -538,15 +541,15 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 		return node.value;
 	}
 
-	async function compile_value_variable(node: Node): Promise<string> {
+	async function compile_value_variable(node: Node): Promise<any> {
 		return return_value(node.properties);
 	}
 
-	async function compile_expression_filter(node: Node): Promise<string> {
+	async function compile_expression_filter(node: Node): Promise<any> {
 		return return_value_filtered(node.value.properties, node.filters);
 	}
 
-	async function compile_expression_conditional(node: Node): Promise<string> {
+	async function compile_expression_conditional(node: Node): Promise<any> {
 		const test = await compile_node(node.test);
 
 		if (test) {
@@ -556,7 +559,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 		}
 	}
 
-	async function compile_expression_logical(node: Node): Promise<string> {
+	async function compile_expression_logical(node: Node): Promise<boolean|undefined> {
 		const left = await compile_node(node.left);
 		const right = await compile_node(node.right);
 
@@ -569,7 +572,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 		}
 	}
 
-	async function compile_expression_unary(node: Node): Promise<string> {
+	async function compile_expression_unary(node: Node): Promise<boolean|undefined> {
 		const value = compile_node(node.value);
 
 		if (node.operator === 'not') {
@@ -583,11 +586,11 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 
 		if (test) {
 			if (node.consequent) {
-				block_output.push(await compile(node.consequent, input_data, input_methods));
+				block_output.push(await compile(node.consequent, input_data, input_methods, input_options));
 			}
 		} else {
 			if (node.alternate) {
-				block_output.push(await compile(node.alternate, input_data, input_methods));
+				block_output.push(await compile(node.alternate, input_data, input_methods, input_options));
 			}
 		}
 
@@ -613,7 +616,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 					block_data[for_key] = loop_iterator[loop_key];
 				}
 
-				block_output.push(await compile(node.body, block_data, input_methods));
+				block_output.push(await compile(node.body, block_data, input_methods, input_options));
 			}
 		} else if (iterator_type === 'array') {
 			const [for_variable, for_index] = node.variables;
@@ -627,7 +630,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 					block_data[for_index] = loop_index;
 				}
 
-				block_output.push(await compile(node.body, block_data, input_methods));
+				block_output.push(await compile(node.body, block_data, input_methods, input_options));
 			}
 		} else {
 			throw new NanoError(
@@ -639,19 +642,15 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 	}
 
 	async function compile_block_comment(node: Node): Promise<string> {
-		if (compile_options.show_comments) {
-			return `<!-- ${node.value} -->`;
-		}
-
-		return '';
+		return compile_options.show_comments ? `<!-- ${node.value} -->` : '';
 	}
 
 	async function compile_tag_import(node: Node): Promise<string> {
 		const import_file = await Deno.readTextFile(node.path);
-		return compile(parse(scan(import_file)), input_data, input_methods);
+		return compile(parse(scan(import_file)), input_data, input_methods, input_options);
 	}
 
-	async function compile_node(node): string {
+	async function compile_node(node: Node): Promise<any> {
 		if (node.type === NODE_TYPES[0]) {
 			return compile_value_text(node);
 		}
@@ -700,6 +699,6 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 	return output.join('');
 }
 
-export async function render(input, input_data, input_methods) {
-	return compile(parse(scan(input)), input_data, input_methods);
+export async function render(input: string, input_data: InputData, input_methods?: InputMethods, input_options?: NanoOptions) {
+	return compile(parse(scan(input)), input_data, input_methods, input_options);
 }
