@@ -302,10 +302,10 @@ export function parse(marks: Mark[]): Node[] {
 
 	function parse_expression_logical(expression_string: string): Node {
 		/**
-		 * 	|	A or B and C      	-->	A or (B and C)
-		 * 	|	A and B or C and D 	-->	(A and B) or (C and D)
-		 * 	|	A and B and C or D 	-->	((A and B) and C) or D
-		 * 	|	not A and B or C    	-->	((not A) and B) or C
+		 * 	A or B and C      	-->	A or (B and C)
+		 * 	A and B or C and D 	-->	(A and B) or (C and D)
+		 * 	A and B and C or D 	-->	((A and B) and C) or D
+		 * 	not A and B or C    	-->	((not A) and B) or C
 		 * */
 
 		const split_or = expression_string.split(RE_OPERATOR_OR);
