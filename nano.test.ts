@@ -1,8 +1,8 @@
 import { scan, parse, compile, render } from './mod.ts';
 
 const TEST_METHODS = {
-	upper: value => value.toString().toUpperCase(),
-	more_than_three: value => value > 3,
+	upper: (value: any) => value.toString().toUpperCase(),
+	more_than_three: (value: any) => value > 3,
 };
 
 const TEST_DATA = {
@@ -36,13 +36,11 @@ const TEST_INPUT = `
 try {
 	console.time('RENDER');
 
-	const scanned = scan(TEST_INPUT);
-	const parsed = parse(scanned);
+	// const scanned = scan(TEST_INPUT);
+	// const parsed = parse(scanned);
 	// const compiled = await compile(parsed, TEST_DATA, TEST_METHODS);
 	const rendered = await render(TEST_INPUT, TEST_DATA, TEST_METHODS);
 
-	// console.log(scanned);
-	// console.log(compiled);
 	console.log(rendered);
 	console.timeEnd('RENDER');
 } catch (error) {
