@@ -506,22 +506,20 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 
 	function return_value(properties: string[]): any {
 		return properties.reduce((parent: any, property: string) => {
-			if (parent[property]) {
-				return parent[property];
-			} else {
-				throw new NanoError(`Variable "${property}" does not exist`);
+			if (parent[property] === undefined) {
+				throw new NanoError(`Variable "${property}" is undefined`);
 			}
+			return parent[property];
 		}, input_data);
 	}
 
 	function return_value_filtered(properties: string[], filters: InputMethods): any {
 		const variable_value = return_value(properties);
 		const filtered_value = filters.reduce((processed_value: any, filter: string) => {
-			if (input_methods && input_methods[filter]) {
-				return input_methods[filter](processed_value);
-			} else {
-				throw new NanoError(`Method "${filter}" does not exist`);
+			if (input_methods === undefined || input_methods[filter] === undefined) {
+				throw new NanoError(`Method "${filter}" is undefined`);
 			}
+			return input_methods[filter](processed_value);
 		}, variable_value);
 
 		return filtered_value;
