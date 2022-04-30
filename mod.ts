@@ -12,14 +12,10 @@
  * 	if/for statements, nested loops, filters, and imports. Nano inherits
  * 	its syntax from the most commonly known template engines like Django, etc.
  *
- * 	|	INB4
- * 	|
  * 	|	should have
  * 	|		[ ] write proper mark/node types zzZzZzZzz...
- * 	|
  * 	|	could have
  * 	|		[ ] binary expressions and groups: == != >, >=, <, <= ( )
- * 	|
  * 	|	won't have
  * 	|		[x] inline variable definitions {{ [1, 2, 2, 3] | unique }}
  *
