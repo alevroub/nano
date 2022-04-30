@@ -24,7 +24,7 @@
 /**
  *
  * 	SCAN
- *		input -> tokens -> marks
+ * 	input -> tokens -> marks
  *
  * 	lexer that splits the string builds a rough mark tree.
  * 	the goal in this step is to make sure the structure of all
