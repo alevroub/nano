@@ -6,11 +6,12 @@
  *
  * 	Nano — a very simple (semi) logic-less template engine. This was initially
  * 	made for playing around with simple prototypes deployed with Deno Deploy,
- * 	which currently doesn't play very well with template engines that rely on
- * 	evaluating expressions at runtime. Nano (currently) onlu supports logical
- * 	expressions with existing variables, as well all the basics like if/for
- * 	statements, nested loops, filters, and imports. Nano inherits its syntax
- * 	from the most commonly known template engines like Django, Twig, etc.
+ * 	which currently doesn't play very well with template engines that rely
+ * 	on evaluating expressions at runtime. Nano currently supports logical
+ * 	expressions but only with defined variables. Nano has support for all
+ * 	the basics like if/for statements, nested loops, filters, and imports.
+ * 	Nano inherits its syntax from the most commonly known template engines
+ * 	like Django, Twig, etc.
  *
  * 	|	should have
  * 	|		[ ] write proper mark/node types zzZzZzZzz...
