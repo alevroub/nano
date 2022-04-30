@@ -23,8 +23,8 @@
 
 /**
  *
- *	1. SCAN
- * 	input -> tokens -> marks
+ * 	SCAN
+ *		input -> tokens -> marks
  *
  * 	lexer that splits the string builds a rough mark tree.
  * 	the goal in this step is to make sure the structure of all
@@ -32,12 +32,10 @@
  * 	invalid block statements or syntax errors are checked in the
  * 	next step when the marks are used to create nodes.
  *
- *		|	MARK TYPES
- * 	|	––––––––––––––––––––––––––––––––––
- *		|	0	BLOCK   		{% if/else/for %}
- *		|	1	VARIABLE		{{ variable }}
- *		|	2	COMMENT 		{# comment #}
- *		|	3	TEXT    		<div>text</div>
+ * 	|	0	BLOCK   		{% if/else/for %}
+ * 	|	1	VARIABLE		{{ variable }}
+ * 	|	2	COMMENT 		{# comment #}
+ * 	|	3	TEXT    		<div>text</div>
  *
  **/
 
@@ -143,7 +141,7 @@ export function scan(input: string): Mark[] {
 
 /**
  *
- * 2. PARSE
+ * 	PARSE
  * 	marks -> nodes
  *
  * 	parser that takes the initial tree of marks and builds a tree of
@@ -151,18 +149,16 @@ export function scan(input: string): Mark[] {
  * 	care of syntax formatting and should provide all relevant properties
  * 	to the renderer.
  *
- * 	|	NODE TYPES
- *		|	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
- *		|	0	value_text            		<div>text</div>
- *		|	1	value_variable        		variable.dot.separated / variable['named-key']
- *		|	2	expression_filter     		variable | filter | names
- *		|	3	expression_conditional		variable ? 'value_if_true' : 'value_if_false'
- *		|	4	expression_logical    		A or B and C
- *		|	5	expression_unary      		not A
- *		|	6	block_if              		{% if variable_1 and/or/not variable_2 %}
- *		|	7	block_for             		{% for num, index in numbers | unique %}
- *		|	8	block_comment         		{# multi-line comment #}
- *		|	9	tag_import            		{{ import 'path/to/file.html' }}
+ * 	|	0	value_text            		<div>text</div>
+ * 	|	1	value_variable        		variable.dot.separated / variable['named-key']
+ * 	|	2	expression_filter     		variable | filter | names
+ * 	|	3	expression_conditional		variable ? 'value_if_true' : 'value_if_false'
+ * 	|	4	expression_logical    		A or B and C
+ * 	|	5	expression_unary      		not A
+ * 	|	6	block_if              		{% if variable_1 and/or/not variable_2 %}
+ * 	|	7	block_for             		{% for num, index in numbers | unique %}
+ * 	|	8	block_comment         		{# multi-line comment #}
+ * 	|	9	tag_import            		{{ import 'path/to/file.html' }}
  *
  **/
 
@@ -230,11 +226,9 @@ export function parse(marks: Mark[]): Node[] {
 			const variables_nested = variable_parts.filter(v => v);
 
 			/**
-			 * 	variable_root["nested"]["properties"]
-			 *
-			 * 	nested properties are parsed as strings by default and
-			 * 	therefore don't have to be checked as valid identifiers
-			 * 	to the same extent
+			 * 	variable_root["nested"]["properties"] are parsed as strings
+			 * 	by default and therefore don't have to be checked as valid
+			 * 	identifiers to the same extent
 			 */
 
 			if (!RE_VARIABLE_VALID.test(variable_root)) {
@@ -478,7 +472,7 @@ export function parse(marks: Mark[]): Node[] {
 
 /**
  *
- *	2. COMPILE
+ * 	COMPILE
  * 	nodes -> output
  *
  * 	interpreter that finally renders the nodes in relation
