@@ -2,7 +2,7 @@
 
 /**
  *
- * 	v0.0.2
+ * 	v0.0.4
  *
  * 	Nano — a very simple (semi) logic-less template engine. This was initially
  * 	made for playing around with simple prototypes deployed with Deno Deploy,
@@ -491,13 +491,13 @@ type InputMethods = {
 };
 
 type NanoOptions = {
-	show_comments: boolean;
-	import_path: string;
+	show_comments?: boolean;
+	import_path?: string;
 };
 
 export async function compile(nodes: Node[], input_data: InputData, input_methods?: InputMethods, input_options?: NanoOptions): Promise<string> {
 	const default_options: NanoOptions = { show_comments: false, import_path: '' };
-	const compile_options: NanoOptions = Object.assign(default_options, input_options);
+	const compile_options: NanoOptions = { ...default_options, ...input_options };
 
 	const output: string[] = [];
 
@@ -575,11 +575,11 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 
 		if (test) {
 			if (node.consequent) {
-				block_output.push(await compile(node.consequent, input_data, input_methods, input_options));
+				block_output.push(await compile(node.consequent, input_data, input_methods, compile_options));
 			}
 		} else {
 			if (node.alternate) {
-				block_output.push(await compile(node.alternate, input_data, input_methods, input_options));
+				block_output.push(await compile(node.alternate, input_data, input_methods, compile_options));
 			}
 		}
 
@@ -605,7 +605,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 					block_data[for_key] = loop_iterator[loop_key];
 				}
 
-				block_output.push(await compile(node.body, block_data, input_methods, input_options));
+				block_output.push(await compile(node.body, block_data, input_methods, compile_options));
 			}
 		} else if (iterator_type === 'array') {
 			const [for_variable, for_index] = node.variables;
@@ -619,7 +619,7 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 					block_data[for_index] = loop_index;
 				}
 
-				block_output.push(await compile(node.body, block_data, input_methods, input_options));
+				block_output.push(await compile(node.body, block_data, input_methods, compile_options));
 			}
 		} else {
 			throw new NanoError(
@@ -635,8 +635,12 @@ export async function compile(nodes: Node[], input_data: InputData, input_method
 	}
 
 	async function compile_tag_import(node: Node): Promise<string> {
-		const import_file = await Deno.readTextFile(node.path);
-		return compile(parse(scan(import_file)), input_data, input_methods, input_options);
+		const import_path = compile_options.import_path;
+		const default_path = default_options.import_path;
+		const import_path_dir = import_path ? import_path.endsWith('/') ? import_path : import_path + '/' : default_path;
+		const import_file = await Deno.readTextFile(import_path_dir + node.path);
+
+		return compile(parse(scan(import_file)), input_data, input_methods, compile_options);
 	}
 
 	async function compile_node(node: Node): Promise<any> {
