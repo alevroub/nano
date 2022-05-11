@@ -14,17 +14,17 @@
  * 	commonly known template engines like Django, Twig, etc. See examples below.
  *
  * 	USAGE
- * 	|	const template 	=		<div>Hello {{ name | shout }}</div>
- * 	|	const data     	=		{ name: "Alejandro" }
- * 	|	const functions	=		{ shout: value => value + '!' }
- * 	|	const options  	=		{}
+ * 	|	const template 	=	<div>Hello {{ name | shout }}</div>
+ * 	|	const data     	=	{ name: "Alejandro" }
+ * 	|	const filters  	=	{ shout: value => value + '!' }
+ * 	|	const options  	=	{}
  * 	|
- * 	|	const rendered 	=		await render(template, data, functions, options)
- * 	|	const result   	=		<div>Hello Alejandro!</div>
+ * 	|	const rendered 	=	await render(template, data, filters, options)
+ * 	|	const result   	=	<div>Hello Alejandro!</div>
  *
  * 	OPTIONS
- * 	|	show_comments  	=		false			// whether to include {# comments #} in output
- * 	|	import_path    	=		''				// path to prepend to filepath in {% import 'filepath' %}
+ * 	|	show_comments  	=	false		whether to include {# comments #} in output
+ * 	|	import_path    	=	''   		path to prepend to filepath in {% import 'filepath' %}
  *
  * 	EXAMPLES
  * 	|	{% for item, index in array_like | unique %}
@@ -55,6 +55,7 @@
  * 	|	will have
  * 	|		[ ] import with scoped props {{ import 'file.html' with { new_variable: other.variable } }}
  * 	|	could have
+ * 	|		[ ] function syntax for filters
  * 	|		[ ] proper mark/node types zzZzZzZzz...
  * 	|		[ ] binary expressions and groups: == != >, >=, <, <= ( )
  * 	|	won't have
