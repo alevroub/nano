@@ -435,7 +435,7 @@ export function parse(marks: Mark[]): Node[] {
 			return parse_block_for_mark(mark);
 		}
 
-		throw new NanoError('Invalid block statement');
+		throw new NanoError(`Invalid {% ${mark.value} %} block`);
 	}
 
 	function parse_tag_import(mark: Mark): Node {
