@@ -49,10 +49,10 @@ class Mark {
 	value: string;
 	marks: Mark[];
 
-	constructor(type: string, value: string) {
+	constructor(type: string, value: string, marks: Mark[] = []) {
 		this.type = type;
 		this.value = value;
-		this.marks = [];
+		this.marks = marks;
 	}
 }
 
