@@ -4,18 +4,58 @@
  *
  * 	v0.0.7
  *
- * 	Nano — a very simple (semi) logic-less template engine. This was initially
+ * 	Nano is a very simple (almost) logic-less template engine. This was initially
  * 	made for playing around with simple prototypes deployed with Deno Deploy,
- * 	which currently doesn't play very well with template engines that rely
- * 	on evaluating expressions at runtime. Nano currently supports logical
- * 	expressions but only with defined variables. Nano has support for all
- * 	the basics like if/for statements, nested loops, filters, and imports.
- * 	Nano inherits its syntax from the most commonly known template engines
- * 	like Django, Twig, etc.
+ * 	which currently doesn't play well with template engines that rely on eval()
+ * 	for evaluating expressions at runtime. Nano currently supports logical
+ * 	expressions but only using variables declared during the rendering phase.
+ * 	Nano has support for all the basics like if/elseif/else/for statements,
+ * 	nested loops, filters, and imports. Nano inherits its syntax from the most
+ * 	commonly known template engines like Django, Twig, etc. See examples below.
  *
- * 	|	should have
- * 	|		[ ] write proper mark/node types zzZzZzZzz...
+ * 	USAGE
+ * 	|	const template 	=		<div>Hello {{ name | shout }}</div>
+ * 	|	const data     	=		{ name: "Alejandro" }
+ * 	|	const functions	=		{ shout: value => value + '!' }
+ * 	|	const options  	=		{}
+ * 	|
+ * 	|	const rendered 	=		await render(template, data, functions, options)
+ * 	|	const result   	=		<div>Hello Alejandro!</div>
+ *
+ * 	OPTIONS
+ * 	|	show_comments  	=		false			// whether to include {# comments #} in output
+ * 	|	import_path    	=		''				// path to prepend to filepath in {% import 'filepath' %}
+ *
+ * 	EXAMPLES
+ * 	|	{% for item, index in array_like | unique %}
+ * 	|		{{ item.a | lowercase }}
+ * 	|	{% endfor %}
+ * 	|
+ * 	|	{% for key, value in object_like | filtered | sorted %}
+ * 	|		{{ value['nested']['property'] | uppercase }}
+ * 	|	{% endfor %}
+ * 	|
+ * 	|	{# comments #}
+ * 	|
+ * 	|	{% if a %}
+ * 	|		{{ import 'a.html' }}
+ * 	|	{% elseif b %}
+ * 	|		{{ import 'b.html' }}
+ * 	|	{% else %}
+ * 	|		{{ import 'c.html' }}
+ * 	|	{% endif %}
+ * 	|
+ * 	|	{% for i in rows %}
+ * 	|		{% for j in columns %}
+ * 	|			<div>{{ i }} {{ j }}</div>
+ * 	|		{% endfor %}
+ * 	|	{% endfor %}
+ *
+ * 	INB4
+ * 	|	will have
+ * 	|		[ ] import with scoped props {{ import 'file.html' with { new_variable: other.variable } }}
  * 	|	could have
+ * 	|		[ ] proper mark/node types zzZzZzZzz...
  * 	|		[ ] binary expressions and groups: == != >, >=, <, <= ( )
  * 	|	won't have
  * 	|		[x] inline variable definitions {{ [1, 2, 2, 3] | unique }}
