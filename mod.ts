@@ -2,7 +2,7 @@
 
 /**
  *
- * 	v0.0.6
+ * 	v0.0.7
  *
  * 	Nano — a very simple (semi) logic-less template engine. This was initially
  * 	made for playing around with simple prototypes deployed with Deno Deploy,
