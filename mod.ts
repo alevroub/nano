@@ -47,7 +47,7 @@
  * 	|
  * 	|	{% for i in rows %}
  * 	|		{% for j in columns %}
- * 	|			<div>{{ i }} {{ j }}</div>
+ * 	|			<div>{{ i | is_even ? "even" : "odd" }}</div>
  * 	|		{% endfor %}
  * 	|	{% endfor %}
  *
@@ -55,7 +55,8 @@
  * 	|	will have
  * 	|		[ ] import with scoped props {{ import 'file.html' with { new_variable: other.variable } }}
  * 	|	could have
- * 	|		[ ] function syntax for filters
+ * 	|		[ ] special variables inside loops like $loop.first and $loop.last
+ * 	|		[ ] function() syntax for filters
  * 	|		[ ] proper mark/node types zzZzZzZzz...
  * 	|		[ ] binary expressions and groups: == != >, >=, <, <= ( )
  * 	|	won't have
