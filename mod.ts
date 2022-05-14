@@ -41,9 +41,9 @@
  * 	|	{# comments #}
  * 	|
  * 	|	{% if a %}
- * 	|		{{ import 'a.html' }}
+ * 	|		{{ import 'a.html' with { scoped: a } }}
  * 	|	{% elseif b %}
- * 	|		{{ import 'b.html' }}
+ * 	|		{{ import 'b.html' with { variable: b | unique } }}
  * 	|	{% else %}
  * 	|		{{ import 'c.html' }}
  * 	|	{% endif %}
@@ -55,8 +55,6 @@
  * 	|	{% endfor %}
  *
  * 	INB4
- * 	|	will have
- * 	|		[ ] import with scoped props {{ import 'file.html' with { new_variable: other.variable } }}
  * 	|	could have
  * 	|		[ ] special variables inside loops like $loop.first and $loop.last
  * 	|		[ ] function() syntax for filters
@@ -228,7 +226,7 @@ export function scan(input: string): Mark[] {
  * 	|	6	block_if              		{% if variable_1 and/or/not variable_2 %}
  * 	|	7	block_for             		{% for num, index in numbers | unique %}
  * 	|	8	block_comment         		{# multi-line comment #}
- * 	|	9	tag_import            		{{ import 'path/to/file.html' }}
+ * 	|	9	tag_import            		{{ import 'path/to/file.html' with { name: value } }}
  *
  **/
 
