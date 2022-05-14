@@ -269,7 +269,7 @@ export function parse(marks: Mark[]): Node[] {
 	const RE_METHOD_INVALID = /[\- ]/;
 	const RE_KEYWORD_IF = /^if /;
 	const RE_KEYWORD_FOR = /^for | in /;
-	const RE_KEYWORD_IMPORT = /^import /;
+	const RE_KEYWORD_IMPORT = /^import | with /;
 	const RE_OPERATOR_NOT = /^not /;
 	const RE_OPERATOR_AND = / and /;
 	const RE_OPERATOR_OR = / or /;
@@ -485,20 +485,35 @@ export function parse(marks: Mark[]): Node[] {
 	}
 
 	function parse_tag_import(mark: Mark): Node {
-		const filepath = mark.value.split(RE_KEYWORD_IMPORT).pop() as string;
-		const filepath_unquoted: string = filepath.slice(1, -1);
-
-		if (!filepath_unquoted) {
-			throw new NanoError('Invalid import path');
-		}
+		const [ filepath, variables ] = mark.value.split(RE_KEYWORD_IMPORT).filter(v => v).map(v => v.trim());
+		const trimmed_filepath = filepath.slice(1, -1);
 
 		if (!RE_VARIABLE_IN_QUOTES.test(filepath)) {
 			throw new NanoError('Import path must be in quotes');
 		}
 
+		if (!trimmed_filepath) {
+			throw new NanoError('Invalid import path');
+		}
+
 		return new Node(NODE_TYPES[9], {
-			path: filepath_unquoted,
+			path: trimmed_filepath,
+			variables: variables ? return_object_map(variables) : null
 		});
+
+		function return_object_map(variables: string): Node {
+			try {
+				const list = variables.slice(1, -1).trim();
+				const pairs = list.split(',').map(v => v.trim());
+
+				return pairs.reduce((map, pair) => {
+					const [ key, value ] = pair.split(':').map(v => v.trim());
+					return { ...map, [key]: parse_expression(value) }
+				}, {});
+			} catch {
+				throw new NanoError('Invalid import variable object');
+			}
+		}
 	}
 
 	function parse_tag_mark(mark: Mark): Node {
@@ -708,8 +723,19 @@ export async function compile(nodes: Node[], input_data: InputData = {}, input_m
 		const default_path = default_options.import_path;
 		const import_path_dir = import_path ? import_path.endsWith('/') ? import_path : import_path + '/' : default_path;
 		const import_file = await Deno.readTextFile(import_path_dir + node.path);
+		const import_data = node.variables ? await compile_scoped_variables(node.variables) : input_data;
 
-		return compile(parse(scan(import_file)), input_data, input_methods, compile_options);
+		async function compile_scoped_variables(variables: Record<string, Node>) {
+			const scoped_variables: Record<string, any> = {};
+
+			for (const key of Object.keys(variables)) {
+				scoped_variables[key] = await compile_node(variables[key])
+			}
+
+			return scoped_variables;
+		}
+
+		return compile(parse(scan(import_file)), import_data, input_methods, compile_options);
 	}
 
 	async function compile_node(node: Node): Promise<any> {
