@@ -121,7 +121,8 @@ export function scan(input: string): Mark[] {
 	const operation_stack: string[] = [];
 	const tokens: Token[] = input.split(RE_ALL).filter(v => v);
 
-	for (const token of tokens) {
+	for (let i = 0; i < tokens.length; i += 1) {
+		const token = tokens[i];
 		const mark_type = return_mark_type(token);
 		const mark_value = mark_type !== MARK_TYPES[3] ? token.slice(2, -2).trim() : token;
 
