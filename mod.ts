@@ -187,6 +187,7 @@ export function scan(input: string): Mark[] {
 
 	function output_mark(mark: Mark) {
 		if (mark_stack.length > 0) {
+			mark.value = mark.value.trimLeft();
 			mark_stack[mark_stack.length - 1].marks.push(mark);
 		} else {
 			marks.push(mark);
