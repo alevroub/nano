@@ -273,6 +273,7 @@ export function parse(marks: Mark[]): Node[] {
 	const RE_VARIABLE_IN_QUOTES = /^['"].+?['"]$/;
 	const RE_VARIABLE_BRACKET_NOTATION = /\[['"]/;
 	const RE_VARIABLE_DIGIT = /^-?(\d|\.\d)+$/;
+	const RE_VARIABLE_BOOLEAN = /^(true|false)$/;
 	const RE_VARIABLE_VALID = /^[0-9a-zA-Z_$]*$/;
 	const RE_METHOD_INVALID = /[\- ]/;
 	const RE_KEYWORD_IF = /^if /;
@@ -299,6 +300,18 @@ export function parse(marks: Mark[]): Node[] {
 		if (RE_VARIABLE_IN_QUOTES.test(value_string)) {
 			return new Node(NODE_TYPES[0], {
 				value: value_string.slice(1, -1),
+			});
+		}
+
+		if (RE_VARIABLE_DIGIT.test(value_string)) {
+			return new Node(NODE_TYPES[0], {
+				value: /\./.test(value_string) ? parseFloat(value_string) : parseInt(value_string),
+			});
+		}
+
+		if (RE_VARIABLE_BOOLEAN.test(value_string)) {
+			return new Node(NODE_TYPES[0], {
+				value: value_string === 'true' ? true : false
 			});
 		}
 
