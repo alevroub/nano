@@ -383,8 +383,8 @@ export function parse(marks: Mark[]): Node[] {
 
 		return new Node(NODE_TYPES[3], {
 			test: parse_expression(test),
-			consequent: parse_expression(consequent),
-			alternate: parse_expression(alternate),
+			consequent: parse_value_like_expression(consequent),
+			alternate: parse_value_like_expression(alternate),
 		});
 	}
 
@@ -442,6 +442,14 @@ export function parse(marks: Mark[]): Node[] {
 			variable: parse_expression(variable),
 			value: parse_expression(value),
 		});
+	}
+
+	function parse_value_like_expression(expression_string: string): Node {
+		if (RE_OPERATOR_FILTER.test(expression_string)) {
+			return parse_expression_filter(expression_string);
+		}
+
+		return parse_value_variable(expression_string);
 	}
 
 	function parse_expression(expression_string: string): Node {
