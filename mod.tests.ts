@@ -22,10 +22,10 @@ const tests = [
 	[`{{ true ? 'yes' : 'no' }}`, `yes`],
 	[`{{ not true ? 'yes' : 'no' }}`, `no`],
 	[`{{ false ? 'yes' : 'no' }}`, `no`],
-	[`{{ not false ? 'yes' : 'no' }}`, `yes`],
+	[`{{ not false ? 10 : 20 }}`, `10`],
 	[`{{ -10 | minus ? 'yes' | upper : 'no' }}`, `YES`],
 
-	[`{% for n in array_like %}{{ n }}{% endfor %}`, `alphabeta`],
+	[`{% for n in array_like %}{{ n }}__{% endfor %}`, `alpha__beta__`],
 	[`{% for n, i in array_like %}{{ i }}:{{ n }}{% endfor %}`, `0:alpha1:beta`],
 	[`{% for n in object_like %}{{ n }}{% endfor %}`, `alphabeta`],
 	[`{% for k, v in object_like %}{{ k }}:{{ v }}{% endfor %}`, `a:alphab:beta`],
@@ -53,5 +53,5 @@ for (let t = 0; t < tests.length; t += 1) {
 	const result = await render(input, data, methods);
 	const pass = result === output;
 
-	console.log(`%c[${t + 1}/${tests.length}] ${ result } / ${ output }`, `color:${pass ? 'green' : 'red'}`);
+	console.log(`%c[${(t + 1).toString().padStart(2, '0')}/${tests.length}] ${ result } / ${ output }`, `color:${pass ? 'green' : 'red'}`);
 }
