@@ -112,7 +112,8 @@ export function scan(input: string): Mark[] {
 	const RE_BLOCK = /^{%.*?%}$/;
 	const RE_TAG = /^{{.*?}}$/;
 	const RE_COMMENT = /^{#[^]*?#}$/;
-	const RE_ALL = /({%.*?%}|{{.*?}}|{#[^]*?#})/;
+	const RE_PRE = /^<pre>[^]*?<\/pre>$/;
+	const RE_ALL = /({%.*?%}|{{.*?}}|{#[^]*?#}|(<pre>)[^]*?(<\/pre>))/;
 	const RE_STACK_BLOCK_TAG = /^\bif\b|^\bfor\b/;
 	const RE_VALID_BLOCK_TAG = /^\bif\b|^\bfor\b|^\belseif\b|^\belse\b/;
 
@@ -122,9 +123,16 @@ export function scan(input: string): Mark[] {
 	const tokens: Token[] = input.split(RE_ALL).filter(v => v);
 
 	for (let i = 0; i < tokens.length; i += 1) {
-		const token = tokens[i];
-		const mark_type = return_mark_type(token);
-		const mark_value = mark_type !== MARK_TYPES[3] ? token.slice(2, -2).trim() : token;
+		const mark_type = return_mark_type(tokens[i]);
+		let mark_value = tokens[i];
+
+		if (mark_type === MARK_TYPES[3]) {
+			if (!RE_PRE.test(mark_value)) {
+				mark_value = mark_value.replace(/[\n\r\t]/g, '')
+			}
+		} else {
+			mark_value = mark_value.slice(2, -2).trim();
+		}
 
 		if (mark_type === MARK_TYPES[0]) {
 			if (mark_value.startsWith('end')) {
@@ -187,7 +195,6 @@ export function scan(input: string): Mark[] {
 
 	function output_mark(mark: Mark) {
 		if (mark_stack.length > 0) {
-			mark.value = mark.value.trimLeft();
 			mark_stack[mark_stack.length - 1].marks.push(mark);
 		} else {
 			marks.push(mark);
