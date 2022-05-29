@@ -4,11 +4,11 @@ const tests = [
 	[`{{ undefined_variable ? "a" : "b" }}`, `b`],
 	[`{{ not undefined_variable ? "a" : "b" }}`, `a`],
 	[`{{ not not undefined_variable ? "a" : "b" }}`, `b`],
-	[`{{ things | first is "alpha" ? "a" : "b" }}`, `a`],
-	[`{{ things | first is not "alpha" ? "a" : "b" }}`, `b`],
-	[`{{ things ? "a" | repeat : "b" }}`, `aaaaa`],
-	[`{{ things or undefined_variable ? "a" | repeat : "b" }}`, `aaaaa`],
-	[`{{ not things or undefined_variable ? "a" | repeat : "b" }}`, `b`],
+	[`{{ array_like | first is "alpha" ? "a" : "b" }}`, `a`],
+	[`{{ array_like | first is not "alpha" ? "a" : "b" }}`, `b`],
+	[`{{ array_like ? "a" | repeat : "b" }}`, `aaaaa`],
+	[`{{ array_like or undefined_variable ? "a" | repeat : "b" }}`, `aaaaa`],
+	[`{{ not array_like or undefined_variable ? "a" | repeat : "b" }}`, `b`],
 
 	[`{{ nested.thing }}`, `100`],
 	[`{{ nested["thing"] }}`, `100`],
@@ -23,22 +23,29 @@ const tests = [
 	[`{{ not true ? 'yes' : 'no' }}`, `no`],
 	[`{{ false ? 'yes' : 'no' }}`, `no`],
 	[`{{ not false ? 'yes' : 'no' }}`, `yes`],
-	[`{{ -10 | minus ? 'yes' : 'no' }}`, `yes`],
+	[`{{ -10 | minus ? 'yes' | upper : 'no' }}`, `YES`],
+
+	[`{% for n in array_like %}{{ n }}{% endfor %}`, `alphabeta`],
+	[`{% for n, i in array_like %}{{ i }}:{{ n }}{% endfor %}`, `0:alpha1:beta`],
+	[`{% for n in object_like %}{{ n }}{% endfor %}`, `alphabeta`],
+	[`{% for k, v in object_like %}{{ k }}:{{ v }}{% endfor %}`, `a:alphab:beta`],
+	[`{% for n in object_like | keys %}{{ n | upper }}{% endfor %}`, `AB`],
 ];
 
 const data = {
-	things: ['alpha', 'beta'],
-	nested: {
-		thing: "100"
-	}
+	array_like: ['alpha', 'beta'],
+	object_like: { a: 'alpha', b: 'beta' },
+	nested: { thing: "100" }
 };
 
 const methods = {
+	upper: v => v.toUpperCase(),
 	lower: v => v.toLowerCase(),
 	first: v => v[0],
 	repeat: v => v.repeat(5),
+	minus: v => v === -10,
+	keys: v => Object.keys(v),
 	type: v => typeof v,
-	minus: v => v === -10
 };
 
 for (let t = 0; t < tests.length; t += 1) {
