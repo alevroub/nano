@@ -360,8 +360,6 @@ export function parse(marks: Mark[]): Node[] {
 			throw new NanoError('Invalid conditional expression');
 		}
 
-		console.log(statement_parts)
-
 		const [test, consequent, alternate] = statement_parts;
 
 		return new Node(NODE_TYPES[3], {
@@ -643,8 +641,6 @@ export async function compile(nodes: Node[], input_data: InputData = {}, input_m
 
 	async function compile_expression_conditional(node: Node): Promise<any> {
 		const test = await compile_node(node.test);
-
-		console.log(node.test)
 
 		if (test) {
 			return compile_node(node.consequent);
