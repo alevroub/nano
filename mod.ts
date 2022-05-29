@@ -251,6 +251,7 @@ const NODE_TYPES = [
 	'expression_conditional',
 	'expression_logical',
 	'expression_unary',
+	'expression_binary',
 	'block_if',
 	'block_for',
 	'block_comment',
@@ -273,6 +274,7 @@ export function parse(marks: Mark[]): Node[] {
 	const RE_OPERATOR_NOT = /^not /;
 	const RE_OPERATOR_AND = / and /;
 	const RE_OPERATOR_OR = / or /;
+	const RE_OPERATOR_BINARY = / is /;
 	const RE_OPERATOR_LOGICAL = /not |( and | or )/;
 	const RE_OPERATOR_FILTER = / ?\| ?/;
 	const RE_OPERATOR_TERNARY = /[?:]/;
@@ -280,7 +282,13 @@ export function parse(marks: Mark[]): Node[] {
 
 	const nodes = [];
 
-	function parse_value(value_string: string): Node {
+	function parse_value_text(mark: Mark) {
+		return new Node(NODE_TYPES[0], {
+			value: mark.value,
+		});
+	}
+
+	function parse_value_variable(value_string: string): Node {
 		if (RE_VARIABLE_IN_QUOTES.test(value_string)) {
 			return new Node(NODE_TYPES[0], {
 				value: value_string.slice(1, -1),
@@ -340,7 +348,7 @@ export function parse(marks: Mark[]): Node[] {
 		}
 
 		return new Node(NODE_TYPES[2], {
-			value: parse_value(variable),
+			value: parse_value_variable(variable),
 			filters: filters,
 		});
 	}
@@ -351,6 +359,8 @@ export function parse(marks: Mark[]): Node[] {
 		if (statement_parts.length < 3) {
 			throw new NanoError('Invalid conditional expression');
 		}
+
+		console.log(statement_parts)
 
 		const [test, consequent, alternate] = statement_parts;
 
@@ -407,9 +417,23 @@ export function parse(marks: Mark[]): Node[] {
 		return parse_expression(expression_string);
 	}
 
+	function parse_expression_binary(expression_string: string): Node {
+		const statement_parts = expression_string.split(RE_OPERATOR_BINARY).map(v => v.trim());
+		const [variable, value] = statement_parts;
+
+		return new Node(NODE_TYPES[6], {
+			variable: parse_expression(variable),
+			value: parse_expression(value),
+		});
+	}
+
 	function parse_expression(expression_string: string): Node {
 		if (RE_OPERATOR_TERNARY.test(expression_string)) {
 			return parse_expression_conditional(expression_string);
+		}
+
+		if (RE_OPERATOR_BINARY.test(expression_string)) {
+			return parse_expression_binary(expression_string);
 		}
 
 		if (RE_OPERATOR_LOGICAL.test(expression_string)) {
@@ -420,10 +444,10 @@ export function parse(marks: Mark[]): Node[] {
 			return parse_expression_filter(expression_string);
 		}
 
-		return parse_value(expression_string);
+		return parse_value_variable(expression_string);
 	}
 
-	function parse_block_if_mark(mark: Mark): Node {
+	function parse_block_if(mark: Mark): Node {
 		const [test] = mark.value.split(RE_KEYWORD_IF).filter(v => v);
 
 		function return_else_marks() {
@@ -442,14 +466,14 @@ export function parse(marks: Mark[]): Node[] {
 		const consequent = mark.marks.length > 0 ? mark.marks : null;
 		const alternate = else_marks.length > 0 ? else_marks : null;
 
-		return new Node(NODE_TYPES[6], {
+		return new Node(NODE_TYPES[7], {
 			test: parse_expression(test),
 			consequent: consequent ? parse(consequent) : null,
 			alternate: alternate ? parse(alternate) : null,
 		});
 	}
 
-	function parse_block_for_mark(mark: Mark): Node {
+	function parse_block_for(mark: Mark): Node {
 		const statement_parts = mark.value.split(RE_KEYWORD_FOR).filter(v => v);
 
 		if (statement_parts.length !== 2) {
@@ -465,23 +489,17 @@ export function parse(marks: Mark[]): Node[] {
 			}
 		}
 
-		return new Node(NODE_TYPES[7], {
+		return new Node(NODE_TYPES[8], {
 			variables: variable_parts,
 			iterator: parse_expression(iterator),
 			body: parse(mark.marks),
 		});
 	}
 
-	function parse_block_mark(mark: Mark): Node {
-		if (mark.value.startsWith('if ')) {
-			return parse_block_if_mark(mark);
-		}
-
-		if (mark.value.startsWith('for ')) {
-			return parse_block_for_mark(mark);
-		}
-
-		throw new NanoError(`Invalid {% ${mark.value} %} block`);
+	function parse_block_comment(mark: Mark): Node {
+		return new Node(NODE_TYPES[9], {
+			value: mark.value,
+		});
 	}
 
 	function parse_tag_import(mark: Mark): Node {
@@ -496,7 +514,7 @@ export function parse(marks: Mark[]): Node[] {
 			throw new NanoError('Invalid import path');
 		}
 
-		return new Node(NODE_TYPES[9], {
+		return new Node(NODE_TYPES[10], {
 			path: trimmed_filepath,
 			variables: variables ? return_object_map(variables) : null
 		});
@@ -516,7 +534,20 @@ export function parse(marks: Mark[]): Node[] {
 		}
 	}
 
-	function parse_tag_mark(mark: Mark): Node {
+
+	function render_block_mark(mark: Mark): Node {
+		if (mark.value.startsWith('if ')) {
+			return parse_block_if(mark);
+		}
+
+		if (mark.value.startsWith('for ')) {
+			return parse_block_for(mark);
+		}
+
+		throw new NanoError(`Invalid {% ${mark.value} %} block`);
+	}
+
+	function render_tag_mark(mark: Mark): Node {
 		if (RE_KEYWORD_IMPORT.test(mark.value)) {
 			return parse_tag_import(mark);
 		}
@@ -524,31 +555,27 @@ export function parse(marks: Mark[]): Node[] {
 		return parse_expression(mark.value);
 	}
 
-	function parse_comment_mark(mark: Mark): Node {
-		return new Node(NODE_TYPES[8], {
-			value: mark.value,
-		});
+	function render_comment_mark(mark: Mark): Node {
+		return parse_block_comment(mark);
 	}
 
-	function parse_text_mark(mark: Mark): Node {
-		return new Node(NODE_TYPES[0], {
-			value: mark.value,
-		});
+	function render_text_mark(mark: Mark): Node {
+		return parse_value_text(mark);
 	}
 
 	for (const mark of marks) {
 		switch (mark.type) {
 			case MARK_TYPES[0]:
-				nodes.push(parse_block_mark(mark));
+				nodes.push(render_block_mark(mark));
 				break;
 			case MARK_TYPES[1]:
-				nodes.push(parse_tag_mark(mark));
+				nodes.push(render_tag_mark(mark));
 				break;
 			case MARK_TYPES[2]:
-				nodes.push(parse_comment_mark(mark));
+				nodes.push(render_comment_mark(mark));
 				break;
 			case MARK_TYPES[3]:
-				nodes.push(parse_text_mark(mark));
+				nodes.push(render_text_mark(mark));
 				break;
 		}
 	}
@@ -590,17 +617,21 @@ export async function compile(nodes: Node[], input_data: InputData = {}, input_m
 		return Object.prototype.toString.call(value).slice(8, -1).toLowerCase();
 	}
 
-	function return_value(properties: string[]): any {
-		return properties.reduce((parent: any, property: string) => {
+	async function compile_value_text(node: Node): Promise<string> {
+		return node.value;
+	}
+
+	async function compile_value_variable(node: Node): Promise<any> {
+		return node.properties.reduce((parent: any, property: string) => {
 			if (parent[property] !== undefined) {
 				return parent[property];
 			}
 		}, input_data);
 	}
 
-	function return_value_filtered(properties: string[], filters: InputMethods): any {
-		const variable_value = return_value(properties);
-		const filtered_value = filters.reduce((processed_value: any, filter: string) => {
+	async function compile_expression_filter(node: Node): Promise<any> {
+		const variable_value = await compile_node(node.value);
+		const filtered_value = node.filters.reduce((processed_value: any, filter: string) => {
 			if (input_methods[filter] === undefined) {
 				throw new NanoError(`Method "${filter}" is undefined`);
 			}
@@ -610,20 +641,10 @@ export async function compile(nodes: Node[], input_data: InputData = {}, input_m
 		return filtered_value;
 	}
 
-	async function compile_value_text(node: Node): Promise<string> {
-		return node.value;
-	}
-
-	async function compile_value_variable(node: Node): Promise<any> {
-		return return_value(node.properties);
-	}
-
-	async function compile_expression_filter(node: Node): Promise<any> {
-		return return_value_filtered(node.value.properties, node.filters);
-	}
-
 	async function compile_expression_conditional(node: Node): Promise<any> {
 		const test = await compile_node(node.test);
+
+		console.log(node.test)
 
 		if (test) {
 			return compile_node(node.consequent);
@@ -645,8 +666,20 @@ export async function compile(nodes: Node[], input_data: InputData = {}, input_m
 		}
 	}
 
+	async function compile_expression_binary(node: Node): Promise<boolean> {
+		const variable = await compile_node(node.variable);
+		const value = await compile_node(node.value);
+
+		if (node.value.operator && node.value.operator === 'not') {
+			const node_value = await compile_node(node.value.value);
+			return variable !== node_value;
+		} else {
+			return variable === value;
+		}
+	}
+
 	async function compile_expression_unary(node: Node): Promise<boolean | undefined> {
-		const value = compile_node(node.value);
+		const value = await compile_node(node.value);
 
 		if (node.operator === 'not') {
 			return !value;
@@ -764,18 +797,22 @@ export async function compile(nodes: Node[], input_data: InputData = {}, input_m
 		}
 
 		if (node.type === NODE_TYPES[6]) {
-			return compile_block_if(node);
+			return compile_expression_binary(node)
 		}
 
 		if (node.type === NODE_TYPES[7]) {
-			return compile_block_for(node);
+			return compile_block_if(node);
 		}
 
 		if (node.type === NODE_TYPES[8]) {
-			return compile_block_comment(node);
+			return compile_block_for(node);
 		}
 
 		if (node.type === NODE_TYPES[9]) {
+			return compile_block_comment(node);
+		}
+
+		if (node.type === NODE_TYPES[10]) {
 			return compile_tag_import(node);
 		}
 	}
