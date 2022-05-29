@@ -40,9 +40,9 @@
  * 	|
  * 	|	{# comments #}
  * 	|
- * 	|	{% if a %}
+ * 	|	{% if variable_exists %}
  * 	|		{{ import 'a.html' with { scoped: a } }}
- * 	|	{% elseif b %}
+ * 	|	{% elseif other.variable is "foo" or another.variable is "bar" %}
  * 	|		{{ import 'b.html' with { variable: b | unique } }}
  * 	|	{% else %}
  * 	|		{{ import 'c.html' }}
@@ -57,9 +57,8 @@
  * 	INB4
  * 	|	could have
  * 	|		[ ] special variables inside loops like $loop.first and $loop.last
- * 	|		[ ] function() syntax for filters
  * 	|		[ ] proper mark/node types zzZzZzZzz...
- * 	|		[ ] binary expressions and groups: == != >, >=, <, <= ( )
+ * 	|		[ ] advanced expressions and groups: >, >=, <, <= ( )
  * 	|	won't have
  * 	|		[x] inline variable definitions {{ [1, 2, 2, 3] | unique }}
  *
