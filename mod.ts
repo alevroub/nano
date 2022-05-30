@@ -61,7 +61,7 @@
  * 	|		[ ] proper mark/node types zzZzZzZzz...
  * 	|		[ ] additional expressions and groups: >, >=, <, <= ( )
  * 	|	won't have
- * 	|		[x] inline variable definitions {{ [1, 2, 2, 3] | unique }}
+ * 	|		[x] inline object-like variable definitions and/or expressions -> {{ [1, 2, 2, 3] | unique }}
  *
  */
 
