@@ -2,7 +2,7 @@
 
 /**
  *
- * 	v0.0.9
+ * 	v0.0.11
  *
  * 	Nano is a very simple (almost) logic-less template engine. This was initially
  * 	made for playing around with simple prototypes deployed with Deno Deploy,
@@ -58,7 +58,7 @@
  * 	|	could have
  * 	|		[ ] special variables inside loops like $loop.first and $loop.last
  * 	|		[ ] proper mark/node types zzZzZzZzz...
- * 	|		[ ] advanced expressions and groups: >, >=, <, <= ( )
+ * 	|		[ ] additional expressions and groups: >, >=, <, <= ( )
  * 	|	won't have
  * 	|		[x] inline variable definitions {{ [1, 2, 2, 3] | unique }}
  *
