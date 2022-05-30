@@ -41,7 +41,7 @@
  * 	|
  * 	|	{# comments #}
  * 	|
- * 	|	{% if variable_exists %}
+ * 	|	{% if some_variable_exists %}
  * 	|		{{ import 'a.html' with { scoped: a } }}
  * 	|	{% elseif other.variable is "foo" or another.variable is not "bar" %}
  * 	|		{{ import 'b.html' with { variable: b | unique } }}
