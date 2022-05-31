@@ -113,6 +113,7 @@ export function scan(input: string): Mark[] {
 	const RE_TAG = /^{{.*?}}$/;
 	const RE_COMMENT = /^{#[^]*?#}$/;
 	const RE_ALL = /({%.*?%}|{{.*?}}|{#[^]*?#})/;
+	const RE_PRE = /<pre>[^]*?<\/pre>/g;
 	const RE_BREAK = /[\n\r\t]/g;
 	const RE_STACK_BLOCK_TAG = /^\bif\b|^\bfor\b/;
 	const RE_VALID_BLOCK_TAG = /^\bif\b|^\bfor\b|^\belseif\b|^\belse\b/;
@@ -120,15 +121,13 @@ export function scan(input: string): Mark[] {
 	const marks: Mark[] = [];
 	const mark_stack: Mark[] = [];
 	const operation_stack: string[] = [];
-	const tokens: Token[] = input.split(RE_ALL).filter(v => v);
+	const tokens: Token[] = trim_input(input).split(RE_ALL).filter(v => v);
 
 	for (let i = 0; i < tokens.length; i += 1) {
 		const mark_type = return_mark_type(tokens[i]);
 		let mark_value = tokens[i];
 
-		if (mark_type === MARK_TYPES[3]) {
-			mark_value = mark_value.replace(RE_BREAK, '')
-		} else {
+		if (mark_type !== MARK_TYPES[3]) {
 			mark_value = mark_value.slice(2, -2).trim();
 		}
 
@@ -172,6 +171,23 @@ export function scan(input: string): Mark[] {
 
 	if (mark_stack.length > 0) {
 		throw new NanoError(`Missing end tag inside {% ${mark_stack[0].value} %} block`);
+	}
+
+	function trim_input(raw_input: string) {
+		const input_pre = raw_input.match(RE_PRE);
+		const input_trim = raw_input.replace(RE_BREAK, '');
+
+		raw_input = input_trim;
+
+		if (input_pre) {
+			const input_trim_pre = input_trim.match(RE_PRE);
+
+			for (let match = 0; match < input_pre.length; match += 1) {
+				raw_input = raw_input.replace(input_trim_pre[match], input_pre[match]);
+			}
+		}
+
+		return raw_input;
 	}
 
 	function traverse_mark_stack(last_in_stack: Mark, mark_type: string) {
