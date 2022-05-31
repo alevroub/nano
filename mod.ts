@@ -155,11 +155,11 @@ export function scan(input: string): Mark[] {
 				traverse_mark_stack(last_in_stack, mark_type);
 			} else {
 				if (!RE_VALID_BLOCK_TAG.test(mark_value)) {
-					throw new NanoError(`Invalid {% ${mark_value} %} statement`)
+					throw new NanoError(`Invalid {% ${mark_value} %} statement`);
 				}
 
 				if (RE_STACK_BLOCK_TAG.test(mark_value)) {
-					operation_stack.push(mark_value)
+					operation_stack.push(mark_value);
 				}
 
 				mark_stack.push(new Mark(mark_type, mark_value));
@@ -325,7 +325,7 @@ export function parse(marks: Mark[]): Node[] {
 
 		if (RE_VARIABLE_BOOLEAN.test(value_string)) {
 			return new Node(NODE_TYPES[0], {
-				value: value_string === 'true' ? true : false
+				value: value_string === 'true' ? true : false,
 			});
 		}
 
@@ -556,7 +556,7 @@ export function parse(marks: Mark[]): Node[] {
 
 		return new Node(NODE_TYPES[10], {
 			path: trimmed_filepath,
-			variables: variables ? return_object_map(variables) : null
+			variables: variables ? return_object_map(variables) : null,
 		});
 
 		function return_object_map(variables: string): Node {
@@ -565,15 +565,14 @@ export function parse(marks: Mark[]): Node[] {
 				const pairs = list.split(',').map(v => v.trim());
 
 				return pairs.reduce((map, pair) => {
-					const [ key, value ] = pair.split(':').map(v => v.trim());
-					return { ...map, [key]: parse_expression(value) }
+					const [key, value] = pair.split(':').map(v => v.trim());
+					return { ...map, [key]: parse_expression(value) };
 				}, {});
 			} catch {
 				throw new NanoError('Invalid import variable object');
 			}
 		}
 	}
-
 
 	function render_block_mark(mark: Mark): Node {
 		if (mark.value.startsWith('if ')) {
@@ -800,7 +799,7 @@ export async function compile(nodes: Node[], input_data: InputData = {}, input_m
 			const scoped_variables: Record<string, any> = {};
 
 			for (const key of Object.keys(variables)) {
-				scoped_variables[key] = await compile_node(variables[key])
+				scoped_variables[key] = await compile_node(variables[key]);
 			}
 
 			return scoped_variables;
@@ -835,7 +834,7 @@ export async function compile(nodes: Node[], input_data: InputData = {}, input_m
 		}
 
 		if (node.type === NODE_TYPES[6]) {
-			return compile_expression_binary(node)
+			return compile_expression_binary(node);
 		}
 
 		if (node.type === NODE_TYPES[7]) {
