@@ -4,15 +4,15 @@
  *
  * 	v0.0.14
  *
- * 	Nano is a very simple (almost) logic-less template engine. This was initially
- * 	made for playing around with simple prototypes deployed with Deno Deploy,
- * 	which currently doesn't play well with template engines that rely on eval()
- * 	for evaluating expressions at runtime. Nano currently supports logical and
- * 	binary expressions but only using variables declared during the rendering phase
- * 	or primitive values i.e. strings, numbers and booleans. Nano does still support
- * 	all the basics like if/elseif/else/for statements, nested loops, filters,
- * 	and imports. Nano inherits most of its syntax from the most commonly known
- * 	template engines like Django, Twig, etc. See examples below.
+ * 	Nano is a simple (almost) logic-less template engine. This was initially made
+ * 	for playing around with simple prototypes deployed with Deno Deploy, which
+ * 	currently doesn't support template engines that rely on eval() for evaluating
+ * 	expressions at runtime. Nano currently supports logical and binary expressions
+ * 	but only using variables passed during the rendering phase or primitive values
+ * 	i.e. strings, numbers and booleans. Nano does still support all the basics like
+ * 	if/elseif/else/for statements, nested loops, filters, and imports with props.
+ * 	Nano inherits most of its syntax from the most commonly known template engines
+ * 	like Django, Twig, etc. See examples below.
  *
  * 	USAGE
  * 	|	const template  =  <div>Hello {{ name | shout }}</div>
@@ -41,10 +41,10 @@
  * 	|
  * 	|	{# comments #}
  * 	|
- * 	|	{% if some_variable_exists %}
- * 	|		{{ import 'a.html' with { scoped: a } }}
- * 	|	{% elseif other.variable is "foo" or another.variable is not "bar" %}
- * 	|		{{ import 'b.html' with { variable: b | unique } }}
+ * 	|	{% if some_variable %}
+ * 	|		{{ import 'a.html' with { scoped: some_variable | uppercase } }}
+ * 	|	{% elseif some.string is "foo" or some.number is not 100 %}
+ * 	|		{{ import 'b.html' }}
  * 	|	{% else %}
  * 	|		{{ import 'c.html' }}
  * 	|	{% endif %}
