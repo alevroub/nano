@@ -662,7 +662,7 @@ export async function compile(nodes: Node[], input_data: InputData = {}, input_m
 
 	async function compile_value_variable(node: Node): Promise<any> {
 		return node.properties.reduce((parent: any, property: string) => {
-			if (parent[property] !== undefined) {
+			if (parent !== undefined && parent[property] !== undefined) {
 				return parent[property];
 			}
 		}, input_data);
