@@ -1,6 +1,7 @@
 import { render } from './mod.ts';
 
 const tests = [
+	[`{{ nested.not.defined }}`, ``],
 	[`{{ undefined_variable ? "a" : "b" }}`, `b`],
 	[`{{ not undefined_variable ? "a" : "b" }}`, `a`],
 	[`{{ not not undefined_variable ? "a" : "b" }}`, `b`],
