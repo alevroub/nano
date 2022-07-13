@@ -411,34 +411,35 @@ export function parse(marks: Mark[]): Node[] {
 		 * 	not A and B or C    	-->	((not A) and B) or C
 		 * */
 
-
 		const split_or = expression_string.split(RE_OPERATOR_OR);
 
 		if (split_or.length >= 2) {
-			const [left, right] = split_or;
+			const split_operator = RE_OPERATOR_OR.toString().slice(1, -1);
+			const [left, ...right] = split_or;
 
 			return new Node(NODE_TYPES[4], {
 				operator: 'or',
 				left: parse_expression_logical(left),
-				right: parse_expression_logical(right),
+				right: parse_expression_logical(right.join(split_operator)),
 			});
 		}
 
 		const split_and = expression_string.split(RE_OPERATOR_AND);
 
 		if (split_and.length >= 2) {
-			const [left, right] = split_and;
+			const split_operator = RE_OPERATOR_AND.toString().slice(1, -1);
+			const [left, ...right] = split_and;
 
 			return new Node(NODE_TYPES[4], {
 				operator: 'and',
 				left: parse_expression_logical(left),
-				right: parse_expression_logical(right),
+				right: parse_expression_logical(right.join(split_operator)),
 			});
 		}
 
 		const split_not = expression_string.split(RE_OPERATOR_NOT);
 
-		if (split_not.length >= 2) {
+		if (split_not.length === 2) {
 			const [operator, value] = split_not;
 
 			return new Node(NODE_TYPES[5], {
