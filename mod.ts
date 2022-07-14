@@ -638,11 +638,11 @@ export function parse(marks: Mark[]): Node[] {
  *
  * */
 
-type InputData = {
+type NanoInputData = {
 	[key: string]: any;
 };
 
-type InputMethods = {
+type NanoInputMethods = {
 	[key: string]: (...args: any[]) => any;
 };
 
@@ -651,7 +651,7 @@ type NanoOptions = {
 	import_path?: string;
 };
 
-export async function compile(nodes: Node[], input_data: InputData = {}, input_methods: InputMethods = {}, input_options?: NanoOptions): Promise<string> {
+export async function compile(nodes: Node[], input_data: NanoInputData = {}, input_methods: NanoInputMethods = {}, input_options?: NanoOptions): Promise<string> {
 	const default_options: NanoOptions = { show_comments: false, import_path: '' };
 	const compile_options: NanoOptions = { ...default_options, ...input_options };
 
@@ -866,6 +866,6 @@ export async function compile(nodes: Node[], input_data: InputData = {}, input_m
 	return output.join('');
 }
 
-export async function render(input: string, input_data: InputData, input_methods?: InputMethods, input_options?: NanoOptions) {
+export async function render(input: string, input_data: NanoInputData = {}, input_methods: NanoInputMethods = {}, input_options?: NanoOptions) {
 	return compile(parse(scan(input)), input_data, input_methods, input_options);
 }
