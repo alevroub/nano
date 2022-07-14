@@ -246,10 +246,11 @@ export function scan(input: string): Mark[] {
  * 	|	3	expression_conditional		variable ? 'value_if_true' : 'value_if_false'
  * 	|	4	expression_logical    		A or B and C
  * 	|	5	expression_unary      		not A
- * 	|	6	block_if              		{% if variable_1 and/or/not variable_2 %}
- * 	|	7	block_for             		{% for num, index in numbers | unique %}
- * 	|	8	block_comment         		{# multi-line comment #}
- * 	|	9	tag_import            		{{ import 'path/to/file.html' with { name: value } }}
+ * 	|	6	expression_binary     		is A
+ * 	|	7	block_if              		{% if variable_1 and/or/not variable_2 %}
+ * 	|	8	block_for             		{% for num, index in numbers | unique %}
+ * 	|	9	block_comment         		{# multi-line comment #}
+ * 	|	10	tag_import            		{{ import 'path/to/file.html' with { name: value } }}
  *
  **/
 
