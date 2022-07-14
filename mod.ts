@@ -475,12 +475,12 @@ export function parse(marks: Mark[]): Node[] {
 			return parse_expression_conditional(expression_string);
 		}
 
-		if (RE_OPERATOR_BINARY.test(expression_string)) {
-			return parse_expression_binary(expression_string);
-		}
-
 		if (RE_OPERATOR_LOGICAL.test(expression_string)) {
 			return parse_expression_logical(expression_string);
+		}
+
+		if (RE_OPERATOR_BINARY.test(expression_string)) {
+			return parse_expression_binary(expression_string);
 		}
 
 		if (RE_OPERATOR_FILTER.test(expression_string)) {
