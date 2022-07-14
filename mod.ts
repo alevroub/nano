@@ -83,6 +83,8 @@
  *
  **/
 
+import { join as join_path } from "https://deno.land/std@0.148.0/path/mod.ts";
+
 class NanoError extends Error {
 	public name = 'NanoSyntaxError';
 }
@@ -794,10 +796,8 @@ export async function compile(nodes: Node[], input_data: NanoInputData = {}, inp
 	}
 
 	async function compile_tag_import(node: Node): Promise<string> {
-		const import_path = compile_options.import_path;
-		const default_path = default_options.import_path;
-		const import_path_dir = import_path ? import_path.endsWith('/') ? import_path : import_path + '/' : default_path;
-		const import_file = await Deno.readTextFile(import_path_dir + node.path);
+		const import_path_dir = compile_options.import_path || default_options.import_path;
+		const import_file = await Deno.readTextFile(join_path(import_path_dir, node.path));
 		const import_data = node.variables ? await compile_scoped_variables(node.variables) : input_data;
 
 		async function compile_scoped_variables(variables: Record<string, Node>) {
