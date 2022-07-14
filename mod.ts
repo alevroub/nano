@@ -182,8 +182,10 @@ export function scan(input: string): Mark[] {
 		if (input_pre) {
 			const input_trim_pre = input_trim.match(RE_PRE);
 
-			for (let match = 0; match < input_pre.length; match += 1) {
-				raw_input = raw_input.replace(input_trim_pre[match], input_pre[match]);
+			if (input_trim_pre) {
+				for (let match = 0; match < input_pre.length; match += 1) {
+					raw_input = raw_input.replace(input_trim_pre[match], input_pre[match]);
+				}
 			}
 		}
 
