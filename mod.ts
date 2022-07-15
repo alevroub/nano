@@ -83,10 +83,8 @@
  *
  **/
 
-import { join as join_path } from "https://deno.land/std@0.148.0/path/mod.ts";
-
 class NanoError extends Error {
-	public name = 'NanoSyntaxError';
+	public name = 'NanoError';
 }
 
 class Mark {
