@@ -298,7 +298,7 @@ export function parse(marks: Mark[]): Node[] {
 	const RE_KEYWORD_IF = /^if /;
 	const RE_KEYWORD_FOR = /^for | in /;
 	const RE_KEYWORD_IMPORT = /^import | with /;
-	const RE_OPERATOR_NOT = /^not /;
+	const RE_OPERATOR_NOT = /not /;
 	const RE_OPERATOR_AND = / and /;
 	const RE_OPERATOR_OR = / or /;
 	const RE_OPERATOR_BINARY = / is /;
@@ -444,12 +444,14 @@ export function parse(marks: Mark[]): Node[] {
 
 		const split_not = expression_string.split(RE_OPERATOR_NOT);
 
-		if (split_not.length === 2) {
-			const [operator, value] = split_not;
+		if (split_not.length >= 2) {
+			const split_operator = RE_OPERATOR_NOT.toString().slice(1, -1).trim();
+			const [left, ...right] = split_not;
+			const not_value = right.map(match => match === "" ? split_operator : match);
 
 			return new Node(NODE_TYPES[5], {
 				operator: 'not',
-				value: parse_expression_logical(value),
+				value: parse_expression_logical(not_value.join(' ')),
 			});
 		}
 
