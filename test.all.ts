@@ -5,7 +5,9 @@ const tests = [
 	[`{{ undefined_variable ? "a" : "b" }}`, `b`],
 	[`{{ not undefined_variable ? "a" : "b" }}`, `a`],
 	[`{{ not not undefined_variable ? "a" : "b" }}`, `b`],
+	[`{{ not undefined_variable and number is 100 ? "a" : "b" }}`, `a`],
 	[`{{ array_like | first is "alpha" ? "a" : "b" }}`, `a`],
+	[`{{ array_like | first | lower is "alpha" ? "a" : "b" }}`, `a`],
 	[`{{ array_like | first is not "alpha" ? "a" : "b" }}`, `b`],
 	[`{{ array_like ? "a" | repeat : "b" }}`, `aaaaa`],
 	[`{{ array_like or undefined_variable ? "a" | repeat : "b" }}`, `aaaaa`],
@@ -34,9 +36,15 @@ const tests = [
 	[`{% for n in object_like | keys %}{{ n | upper }}{% endfor %}`, `AB`],
 ];
 
+const tests_ = [
+	[`{{ undefined_variable ? "a" : "b" }}`, `b`],
+	[`{{ not undefined_variable ? "a" : "b" }}`, `a`],
+	[`{{ not not undefined_variable ? "a" : "b" }}`, `b`],
+];
+
 const data = {
 	number: 100,
-	nested: { thing: "100" },
+	nested: { thing: '100' },
 	array_like: ['alpha', 'beta'],
 	object_like: { a: 'alpha', b: 'beta' },
 };
@@ -53,8 +61,15 @@ const methods = {
 
 for (let t = 0; t < tests.length; t += 1) {
 	const [input, output] = tests[t];
-	const result = await render(input, data, methods);
-	const pass = result === output;
+	const count = `${(t + 1).toString().padStart(2, '0')}/${tests.length}`;
 
-	console.log(`%c[${(t + 1).toString().padStart(2, '0')}/${tests.length}] ${ result } / ${ output }`, `color:${pass ? 'green' : 'red'}`);
+	try {
+		const result = await render(input, data, methods);
+		const pass = result === output;
+
+		console.log(`%c[${count} ${pass ? 'PASS' : 'FAIL'}] ${input}`, `color:${pass ? 'green' : 'red'}`);
+	} catch(error) {
+		console.log(`%c[${count} FAIL] ${input}`, `color:red`);
+		console.log(`>>> ${error.message}`)
+	}
 }
