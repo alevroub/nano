@@ -83,6 +83,8 @@
  *
  **/
 
+import { join as join_path } from "https://deno.land/std@0.148.0/path/mod.ts";
+
 class NanoError extends Error {
 	public name = 'NanoError';
 }
@@ -797,20 +799,26 @@ export async function compile(nodes: Node[], input_data: NanoInputData = {}, inp
 
 	async function compile_tag_import(node: Node): Promise<string> {
 		const import_path_dir = compile_options.import_path || default_options.import_path;
-		const import_file = await Deno.readTextFile(join_path(import_path_dir, node.path));
-		const import_data = node.variables ? await compile_scoped_variables(node.variables) : input_data;
+		const import_file_path = join_path(import_path_dir, node.path);
 
-		async function compile_scoped_variables(variables: Record<string, Node>) {
-			const scoped_variables: Record<string, any> = {};
+		try {
+			const import_file = await Deno.readTextFile(import_file_path);
+			const import_data = node.variables ? await compile_scoped_variables(node.variables) : input_data;
 
-			for (const key of Object.keys(variables)) {
-				scoped_variables[key] = await compile_node(variables[key]);
+			async function compile_scoped_variables(variables: Record<string, Node>) {
+				const scoped_variables: Record<string, any> = {};
+
+				for (const key of Object.keys(variables)) {
+					scoped_variables[key] = await compile_node(variables[key]);
+				}
+
+				return scoped_variables;
 			}
 
-			return scoped_variables;
+			return compile(parse(scan(import_file)), import_data, input_methods, compile_options);
+		} catch(error) {
+			throw new NanoError(`Imported file does not exist: ${import_file_path}`);
 		}
-
-		return compile(parse(scan(import_file)), import_data, input_methods, compile_options);
 	}
 
 	async function compile_node(node: Node): Promise<any> {
