@@ -247,14 +247,14 @@ export function scan(input: string): Mark[] {
  *
  * 	|	0	value_primitive       		"text" | 100 | true | false
  * 	|	1	value_variable        		variable.dot.separated / variable['named-key']
- * 	|	2	expression_filter     		variable | filter | names
- * 	|	3	expression_conditional		variable ? 'value_if_true' : 'value_if_false'
+ * 	|	2	expression_filter     		variable | filter_1 | filter_2
+ * 	|	3	expression_ternary    		variable ? 'value_if_true' : 'value_if_false'
  * 	|	4	expression_logical    		A && B || C
  * 	|	5	expression_unary      		!A
- * 	|	6	expression_binary     		A == != > < >= <= B
- * 	|	7	block_if              		{% if variable_1 and/or/not variable_2 %}
- * 	|	8	block_for             		{% for num, index in numbers | unique %}
- * 	|	9	block_comment         		{# multi-line comment #}
+ * 	|	6	expression_binary     		== != > < >= <=
+ * 	|	7	block_if              		{% if condition_1 %} {% elseif condition_2 %} {% endif %}
+ * 	|	8	block_for             		{% for num, index in numbers | unique %} {% endfor %}
+ * 	|	9	tag_comment           		{# multi-line comment #}
  * 	|	10	tag_import            		{{ import 'path/to/file.html' with { name: value } }}
  *
  **/
