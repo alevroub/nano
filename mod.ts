@@ -281,7 +281,7 @@ const NODE_TYPES = [
 	'expression_binary',
 	'block_if',
 	'block_for',
-	'block_comment',
+	'tag_comment',
 	'tag_import',
 ];
 
@@ -543,7 +543,7 @@ export function parse(marks: Mark[]): Node[] {
 		});
 	}
 
-	function parse_block_comment(mark: Mark): Node {
+	function parse_tag_comment(mark: Mark): Node {
 		return new Node(NODE_TYPES[9], {
 			value: mark.value,
 		});
@@ -602,7 +602,7 @@ export function parse(marks: Mark[]): Node[] {
 	}
 
 	function render_comment_mark(mark: Mark): Node {
-		return parse_block_comment(mark);
+		return parse_tag_comment(mark);
 	}
 
 	function render_text_mark(mark: Mark): Node {
@@ -790,7 +790,7 @@ export async function compile(nodes: Node[], input_data: NanoInputData = {}, inp
 		return block_output.join('');
 	}
 
-	async function compile_block_comment(node: Node): Promise<string> {
+	async function compile_tag_comment(node: Node): Promise<string> {
 		return compile_options.display_comments ? `<!-- ${node.value} -->` : '';
 	}
 
@@ -856,7 +856,7 @@ export async function compile(nodes: Node[], input_data: NanoInputData = {}, inp
 		}
 
 		if (node.type === NODE_TYPES[9]) {
-			return compile_block_comment(node);
+			return compile_tag_comment(node);
 		}
 
 		if (node.type === NODE_TYPES[10]) {
