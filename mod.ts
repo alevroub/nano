@@ -16,42 +16,9 @@
  * 	|	const template  =  <div>Hello {{ name | shout }}</div>
  * 	|	const data      =  { name: "Alejandro" }
  * 	|	const filters   =  { shout: value => value + '!' }
- * 	|	const options   =  {}
  * 	|
- * 	|	>  await render(template, data, filters, options)
+ * 	|	>  await render(template, data, filters)
  * 	|	>  <div>Hello Alejandro!</div>
- *
- * 	OPTIONS
- * 	|	display_comments (default: false)	| whether to display {# comments #}
- * 	|	                                 	| in the rendered output
- * 	|
- * 	|	import_path      (default: '')   	| path to prepend to filepath
- * 	|	                                 	| in {% import 'filepath' %}
- *
- * 	EXAMPLES
- * 	|	{% for item, index in array_like | unique %}
- * 	|		{{ item.a | lowercase }}
- * 	|	{% endfor %}
- * 	|
- * 	|	{% for key, value in object_like | filtered | sorted %}
- * 	|		{{ value['nested']['property'] | uppercase }}
- * 	|	{% endfor %}
- * 	|
- * 	|	{# comments #}
- * 	|
- * 	|	{% if some_variable > 100 && other <= 5 | times_two %}
- * 	|		{{ import 'a.html' with { scoped: some_variable | uppercase } }}
- * 	|	{% elseif nested.string == "foo" || nested.number != 100 %}
- * 	|		{{ import 'b.html' }}
- * 	|	{% else %}
- * 	|		{{ import 'c.html' }}
- * 	|	{% endif %}
- * 	|
- * 	|	{% for i in rows %}
- * 	|		{% for j in columns %}
- * 	|			<div>{{ i | is_even ? "even" : "odd" }}</div>
- * 	|		{% endfor %}
- * 	|	{% endfor %}
  *
  * 	INB4
  * 	|	should have
