@@ -4,15 +4,13 @@
  *
  * 	v0.0.15
  *
- * 	Nano is a simple (almost) logic-less template engine. This was initially made
- * 	for playing around with simple prototypes deployed with Deno Deploy, which
- * 	currently doesn't support template engines that rely on eval() for evaluating
- * 	expressions at runtime. Nano currently supports logical and binary expressions
- * 	but only using variables passed during the rendering phase or primitive values
- * 	i.e. strings, numbers and booleans. Nano does still support all the basics like
- * 	if/elseif/else/for statements, nested loops, filters, and imports with props.
- * 	Nano inherits most of its syntax from the most commonly known template engines
- * 	like Django, Twig, etc. See examples below.
+ * 	Nano is a template engine initially made for use with Deno Deploy, which currently
+ * 	doesn't support template engines that rely on eval() for evaluating expressions
+ * 	at runtime. Nano currently supports logical and binary expressions but only using
+ * 	variables passed during the rendering phase or primitive values i.e. strings, numbers
+ * 	and booleans. Nano does still support all the basics like if/elseif/else/for statements,
+ * 	nested loops, filters, and imports with props. Nano inherits most of its syntax
+ * 	from the most commonly known template engines like Django, Twig, etc.
  *
  * 	USAGE
  * 	|	const template  =  <div>Hello {{ name | shout }}</div>
