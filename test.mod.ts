@@ -1,11 +1,13 @@
-import { render } from './mod.ts';
+import { parse, scan, render } from './mod.ts';
 
 const input = `
-	{{ import "folder/test.import.html" with { nested_var: array_like } }}
+	{{ boolean == true ? "YES" : "NO" }}
 `;
 
 const data = {
+	boolean: true,
 	number: 100,
+	string: "bbb",
 	nested: { thing: "100" },
 	array_like: ['alpha', 'beta'],
 	object_like: { a: 'alpha', b: 'beta' },
@@ -21,6 +23,7 @@ const methods = {
 	type: v => typeof v,
 };
 
-const result = await render(input, data, methods);
+// const result = await parse(scan(input));
+const result = await render(input, data, methods, { show_comments: true });
 
-console.log([result])
+console.log(JSON.stringify(result, null, 3))
