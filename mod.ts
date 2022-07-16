@@ -550,7 +550,7 @@ export function parse(marks: Mark[]): Node[] {
 	}
 
 	function parse_tag_import(mark: Mark): Node {
-		const [ filepath, variables ] = mark.value.split(RE_KEYWORD_IMPORT).filter(v => v).map(v => v.trim());
+		const [filepath, variables] = mark.value.split(RE_KEYWORD_IMPORT).filter(v => v).map(v => v.trim());
 		const trimmed_filepath = filepath.slice(1, -1);
 
 		if (!RE_VARIABLE_IN_QUOTES.test(filepath)) {
