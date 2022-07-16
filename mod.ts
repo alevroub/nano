@@ -39,9 +39,9 @@
  * 	|
  * 	|	{# comments #}
  * 	|
- * 	|	{% if some_variable %}
+ * 	|	{% if some_variable > 100 && other <= 5 | times_two %}
  * 	|		{{ import 'a.html' with { scoped: some_variable | uppercase } }}
- * 	|	{% elseif some.string is "foo" or some.number is not 100 %}
+ * 	|	{% elseif nested.string == "foo" || nested.number != 100 %}
  * 	|		{{ import 'b.html' }}
  * 	|	{% else %}
  * 	|		{{ import 'c.html' }}
