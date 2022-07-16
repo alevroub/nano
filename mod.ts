@@ -116,8 +116,8 @@ export function scan(input: string): Mark[] {
 	const RE_TAG = /^{{.*?}}$/;
 	const RE_COMMENT = /^{#[^]*?#}$/;
 	const RE_ALL = /({%.*?%}|{{.*?}}|{#[^]*?#})/;
-	const RE_PRE = /<pre>[^]*?<\/pre>/g;
 	const RE_BREAK = /[\n\r\t]/g;
+	const RE_BREAK_IGNORE = /(<pre>|<!--|{#)[^]*?(<\/pre>|-->|#})/g;
 	const RE_STACK_BLOCK_TAG = /^\bif\b|^\bfor\b/;
 	const RE_VALID_BLOCK_TAG = /^\bif\b|^\bfor\b|^\belseif\b|^\belse\b/;
 
@@ -177,13 +177,13 @@ export function scan(input: string): Mark[] {
 	}
 
 	function trim_input(raw_input: string) {
-		const input_pre = raw_input.match(RE_PRE);
+		const input_pre = raw_input.match(RE_BREAK_IGNORE);
 		const input_trim = raw_input.replace(RE_BREAK, '');
 
 		raw_input = input_trim;
 
 		if (input_pre) {
-			const input_trim_pre = input_trim.match(RE_PRE);
+			const input_trim_pre = input_trim.match(RE_BREAK_IGNORE);
 
 			if (input_trim_pre) {
 				for (let match = 0; match < input_pre.length; match += 1) {
