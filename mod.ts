@@ -394,7 +394,7 @@ export function parse(marks: Mark[]): Node[] {
 		});
 	}
 
-	function parse_expression_conditional(expression_string: string): Node {
+	function parse_expression_ternary(expression_string: string): Node {
 		const statement_parts = expression_string.split(RE_OPERATOR_TERNARY).map(v => v.trim());
 
 		if (statement_parts.length < 3) {
@@ -476,7 +476,7 @@ export function parse(marks: Mark[]): Node[] {
 
 	function parse_expression(expression_string: string): Node {
 		if (RE_OPERATOR_TERNARY.test(expression_string)) {
-			return parse_expression_conditional(expression_string);
+			return parse_expression_ternary(expression_string);
 		}
 
 		if (RE_OPERATOR_LOGICAL.test(expression_string)) {
