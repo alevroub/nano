@@ -674,7 +674,7 @@ export async function compile(nodes: Node[], input_data: NanoInputData = {}, inp
 		}
 	}
 
-	async function compile_expression_binary(node: Node): Promise<boolean> {
+	async function compile_expression_binary(node: Node): Promise<boolean | undefined> {
 		const left = await compile_node(node.left);
 		const right = await compile_node(node.right);
 
@@ -762,7 +762,7 @@ export async function compile(nodes: Node[], input_data: NanoInputData = {}, inp
 	}
 
 	async function compile_tag_import(node: Node): Promise<string> {
-		const import_path_dir = compile_options.import_path || default_options.import_path;
+		const import_path_dir = compile_options.import_path || default_options.import_path || "";
 		const import_file_path = join_path(import_path_dir, node.path);
 
 		try {
