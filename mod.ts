@@ -58,11 +58,11 @@
  * 	|		[ ] reserve null and undefined keywords for misc expressions
  * 	|		[ ] keep track of indentation and line numbers for debugging/error messages
  * 	|	could have
- * 	|		[ ] expressions groups ( )
+ * 	|		[ ] expression groups ( )
  * 	|		[ ] proper mark/node types zzZzZzZzz...
  * 	|	won't have
  * 	|		[x] arithmetic operators + - / *
- * 	|		[x] inline object-like variable expressions -> {{ [1, 2, 2, 3] | unique }}
+ * 	|		[x] inline object-like variable definitions -> {{ [1, 2, 2, 3] | unique }}
  *
  */
 
