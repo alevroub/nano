@@ -275,7 +275,7 @@ const NODE_TYPES = [
 	'value_primitive',
 	'value_variable',
 	'expression_filter',
-	'expression_conditional',
+	'expression_ternary',
 	'expression_logical',
 	'expression_unary',
 	'expression_binary',
