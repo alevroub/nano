@@ -272,7 +272,7 @@ class Node {
 }
 
 const NODE_TYPES = [
-	'value_text',
+	'value_primitive',
 	'value_variable',
 	'expression_filter',
 	'expression_conditional',
