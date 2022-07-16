@@ -22,11 +22,11 @@
  * 	|	>  <div>Hello Alejandro!</div>
  *
  * 	OPTIONS
- * 	|	show_comments (default: false)	| whether to include {# comments #}
- * 	|	                              	| in the rendered output
+ * 	|	display_comments (default: false)	| whether to display {# comments #}
+ * 	|	                                 	| in the rendered output
  * 	|
- * 	|	import_path   (default: '')   	| path to prepend to filepath
- * 	|	                              	| in {% import 'filepath' %}
+ * 	|	import_path      (default: '')   	| path to prepend to filepath
+ * 	|	                                 	| in {% import 'filepath' %}
  *
  * 	EXAMPLES
  * 	|	{% for item, index in array_like | unique %}
@@ -54,12 +54,15 @@
  * 	|	{% endfor %}
  *
  * 	INB4
+ * 	|	should have
+ * 	|		[ ] reserve null and undefined keywords for misc expressions
+ * 	|		[ ] keep track of indentation and line numbers for debugging/error messages
  * 	|	could have
- * 	|		[ ] special variables inside loops like $loop.first and $loop.last
+ * 	|		[ ] expressions groups ( )
  * 	|		[ ] proper mark/node types zzZzZzZzz...
- * 	|		[ ] additional expressions and groups: >, >=, <, <= ( )
  * 	|	won't have
- * 	|		[x] inline object-like variable definitions and/or expressions -> {{ [1, 2, 2, 3] | unique }}
+ * 	|		[x] arithmetic operators + - / *
+ * 	|		[x] inline object-like variable expressions -> {{ [1, 2, 2, 3] | unique }}
  *
  */
 
@@ -242,13 +245,13 @@ export function scan(input: string): Mark[] {
  * 	care of syntax formatting and should provide all relevant properties
  * 	to the renderer.
  *
- * 	|	0	value_text            		<div>text</div>
+ * 	|	0	value_primitive       		"text" | 100 | true | false
  * 	|	1	value_variable        		variable.dot.separated / variable['named-key']
  * 	|	2	expression_filter     		variable | filter | names
  * 	|	3	expression_conditional		variable ? 'value_if_true' : 'value_if_false'
- * 	|	4	expression_logical    		A or B and C
- * 	|	5	expression_unary      		not A
- * 	|	6	expression_binary     		is A
+ * 	|	4	expression_logical    		A && B || C
+ * 	|	5	expression_unary      		!A
+ * 	|	6	expression_binary     		A == != > < >= <= B
  * 	|	7	block_if              		{% if variable_1 and/or/not variable_2 %}
  * 	|	8	block_for             		{% for num, index in numbers | unique %}
  * 	|	9	block_comment         		{# multi-line comment #}
