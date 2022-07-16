@@ -288,22 +288,23 @@ const NODE_TYPES = [
 export function parse(marks: Mark[]): Node[] {
 	const RE_ACCESS_DOT = /\./;
 	const RE_ACCESS_BRACKET = /\[["']|['"]\]/;
-	const RE_VARIABLE_EXPRESSION_LIKE = /[\&\|\<\>\+\-\=\!\{\}\,]/;
+	const RE_EXPRESSION_ARITHMETIC_LIKE = /[\+\-\*\/\%]/;
+	const RE_VARIABLE_OBJECT_LIKE = /[\{\}\[\]]/;
 	const RE_VARIABLE_EMPTY = /^['"]['"]$/;
 	const RE_VARIABLE_IN_QUOTES = /^['"].+?['"]$/;
 	const RE_VARIABLE_BRACKET_NOTATION = /\[['"]/;
 	const RE_VARIABLE_DIGIT = /^-?(\d|\.\d)+$/;
 	const RE_VARIABLE_BOOLEAN = /^(true|false)$/;
 	const RE_VARIABLE_VALID = /^[0-9a-zA-Z_$]*$/;
-	const RE_METHOD_INVALID = /[\- ]/;
 	const RE_KEYWORD_IF = /^if /;
 	const RE_KEYWORD_FOR = /^for | in /;
 	const RE_KEYWORD_IMPORT = /^import | with /;
-	const RE_OPERATOR_NOT = /not /;
-	const RE_OPERATOR_AND = / and /;
-	const RE_OPERATOR_OR = / or /;
-	const RE_OPERATOR_BINARY = / is /;
-	const RE_OPERATOR_LOGICAL = /not |( and | or )/;
+	const RE_OPERATOR_NOT = /(\!(?!\=))/;
+	const RE_OPERATOR_AND = /( \&\& )/;
+	const RE_OPERATOR_OR = /( \|\| )/;
+	const RE_OPERATOR_LOGICAL = /( ?\!(?!\=)| \&\& | \|\| )/g;
+	const RE_OPERATOR_BINARY = / ?(==|!=|>=|<=|>|<) ?/g;
+	const RE_OPERATOR_UNARY = / ?(!)/g;
 	const RE_OPERATOR_FILTER = / ?\| ?/;
 	const RE_OPERATOR_TERNARY = /[?:]/;
 	const RE_OPERATOR_INDEX = /\, ?/;
@@ -419,40 +420,36 @@ export function parse(marks: Mark[]): Node[] {
 
 		const split_or = expression_string.split(RE_OPERATOR_OR);
 
-		if (split_or.length >= 2) {
-			const split_operator = RE_OPERATOR_OR.toString().slice(1, -1);
-			const [left, ...right] = split_or;
+		if (split_or.length >= 3) {
+			const [left, operator, ...right] = split_or;
 
 			return new Node(NODE_TYPES[4], {
-				operator: 'or',
+				operator: '||',
 				left: parse_expression_logical(left),
-				right: parse_expression_logical(right.join(split_operator)),
+				right: parse_expression_logical(right.join('')),
 			});
 		}
 
 		const split_and = expression_string.split(RE_OPERATOR_AND);
 
-		if (split_and.length >= 2) {
-			const split_operator = RE_OPERATOR_AND.toString().slice(1, -1);
-			const [left, ...right] = split_and;
+		if (split_and.length >= 3) {
+			const [left, operator, ...right] = split_and;
 
 			return new Node(NODE_TYPES[4], {
-				operator: 'and',
+				operator: '&&',
 				left: parse_expression_logical(left),
-				right: parse_expression_logical(right.join(split_operator)),
+				right: parse_expression_logical(right.join('')),
 			});
 		}
 
 		const split_not = expression_string.split(RE_OPERATOR_NOT);
 
-		if (split_not.length >= 2) {
-			const split_operator = RE_OPERATOR_NOT.toString().slice(1, -1).trim();
-			const [left, ...right] = split_not;
-			const not_value = right.map(match => match === "" ? split_operator : match);
+		if (split_not.length === 3) {
+			const [_, operator, variable] = split_not;
 
 			return new Node(NODE_TYPES[5], {
-				operator: 'not',
-				value: parse_expression_logical(not_value.join(' ')),
+				operator: '!',
+				value: parse_expression_logical(variable),
 			});
 		}
 
@@ -460,12 +457,12 @@ export function parse(marks: Mark[]): Node[] {
 	}
 
 	function parse_expression_binary(expression_string: string): Node {
-		const statement_parts = expression_string.split(RE_OPERATOR_BINARY).map(v => v.trim());
-		const [variable, value] = statement_parts;
+		const [left, operator, right] = expression_string.split(RE_OPERATOR_BINARY);
 
 		return new Node(NODE_TYPES[6], {
-			variable: parse_expression(variable),
-			value: parse_expression(value),
+			operator: operator,
+			left: parse_expression(left),
+			right: parse_expression(right),
 		});
 	}
 
@@ -704,32 +701,31 @@ export async function compile(nodes: Node[], input_data: NanoInputData = {}, inp
 		const left = await compile_node(node.left);
 		const right = await compile_node(node.right);
 
-		if (node.operator === 'and') {
-			return left && right;
-		}
-
-		if (node.operator === 'or') {
-			return left || right;
+		switch (node.operator) {
+			case "&&": return left && right;
+			case "||": return left || right;
 		}
 	}
 
 	async function compile_expression_binary(node: Node): Promise<boolean> {
-		const variable = await compile_node(node.variable);
-		const value = await compile_node(node.value);
+		const left = await compile_node(node.left);
+		const right = await compile_node(node.right);
 
-		if (node.value.operator && node.value.operator === 'not') {
-			const node_value = await compile_node(node.value.value);
-			return variable !== node_value;
-		} else {
-			return variable === value;
+		switch(node.operator) {
+			case '==': return left === right;
+			case '!=': return left !== right;
+			case '>': return left > right;
+			case '<': return left < right;
+			case '>=': return left >= right;
+			case '<=': return left <= right;
 		}
 	}
 
 	async function compile_expression_unary(node: Node): Promise<boolean | undefined> {
 		const value = await compile_node(node.value);
 
-		if (node.operator === 'not') {
-			return !value;
+		switch(node.operator) {
+			case '!': return !value;
 		}
 	}
 
