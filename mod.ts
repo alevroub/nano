@@ -214,7 +214,7 @@ export function scan(input: string): Mark[] {
  * 	|	0 	value_primitive       		"text" | 100 | true | false
  * 	|	1 	value_variable        		variable.dot.separated / variable['named-key']
  * 	|	2 	expression_filter     		variable | filter_1 | filter_2
- * 	|	3 	expression_ternary    		variable ? 'value_if_true' : 'value_if_false'
+ * 	|	3 	expression_conditional		variable ? 'value_if_true' : 'value_if_false'
  * 	|	4 	expression_logical    		A && B || C
  * 	|	5 	expression_unary      		!A
  * 	|	6 	expression_binary     		== != > < >= <=
@@ -241,7 +241,7 @@ const NODE_TYPES = [
 	'value_primitive',
 	'value_variable',
 	'expression_filter',
-	'expression_ternary',
+	'expression_conditional',
 	'expression_logical',
 	'expression_unary',
 	'expression_binary',
@@ -269,10 +269,10 @@ export function parse(marks: Mark[]): Node[] {
 	const RE_OPERATOR_NOT = /(\!(?!\=))/;
 	const RE_OPERATOR_AND = /( \&\& )/;
 	const RE_OPERATOR_OR = /( \|\| )/;
+	const RE_OPERATOR_CONDITIONAL = /(?=([^"]*"[^"]*")*[^"]*$)(?=)[?:]/g;
 	const RE_OPERATOR_LOGICAL = /( ?\!(?!\=)| \&\& | \|\| )/g;
 	const RE_OPERATOR_BINARY = / ?(==|!=|>=|<=|>|<) ?/g;
 	const RE_OPERATOR_FILTER = / ?\| ?/;
-	const RE_OPERATOR_TERNARY = /[?:]/;
 	const RE_OPERATOR_INDEX = /\, ?/;
 
 	const nodes = [];
@@ -374,8 +374,8 @@ export function parse(marks: Mark[]): Node[] {
 		});
 	}
 
-	function parse_expression_ternary(expression_string: string): Node {
-		const statement_parts = expression_string.split(RE_OPERATOR_TERNARY).map(v => v.trim());
+	function parse_expression_conditional(expression_string: string): Node {
+		const statement_parts = expression_string.split(RE_OPERATOR_CONDITIONAL).filter(v => v).map(v => v.trim());
 
 		if (statement_parts.length < 3) {
 			throw new NanoError('Invalid conditional expression');
@@ -455,8 +455,8 @@ export function parse(marks: Mark[]): Node[] {
 	}
 
 	function parse_expression(expression_string: string): Node {
-		if (RE_OPERATOR_TERNARY.test(expression_string)) {
-			return parse_expression_ternary(expression_string);
+		if (RE_OPERATOR_CONDITIONAL.test(expression_string)) {
+			return parse_expression_conditional(expression_string);
 		}
 
 		if (RE_OPERATOR_LOGICAL.test(expression_string)) {
