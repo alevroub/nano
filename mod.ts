@@ -22,7 +22,6 @@
  *
  * 	INB4
  * 	|	should have
- * 	|		[ ] reserve null and undefined keywords for misc expressions
  * 	|		[ ] keep track of indentation and line numbers for debugging/error messages
  * 	|	could have
  * 	|		[ ] expression groups ( )
@@ -262,6 +261,7 @@ export function parse(marks: Mark[]): Node[] {
 	const RE_VARIABLE_BRACKET_NOTATION = /\[['"]/;
 	const RE_VARIABLE_DIGIT = /^-?(\d|\.\d)+$/;
 	const RE_VARIABLE_BOOLEAN = /^(true|false)$/;
+	const RE_VARIABLE_FALSY = /^(null|undefined)$/;
 	const RE_VARIABLE_VALID = /^[0-9a-zA-Z_$]*$/;
 	const RE_KEYWORD_IF = /^if /;
 	const RE_KEYWORD_FOR = /^for | in /;
@@ -290,12 +290,10 @@ export function parse(marks: Mark[]): Node[] {
 			});
 		}
 
-		if (RE_VARIABLE_ARITHMETIC_LIKE.test(value_string)) {
-			throw new NanoError(`Arithmetic operators are not supported: "${ value_string }"`);
-		}
-
-		if (RE_VARIABLE_OBJECT_LIKE.test(value_string)) {
-			throw new NanoError(`Inline object or array variables are not supported`);
+		if (RE_VARIABLE_FALSY.test(value_string)) {
+			return new Node(NODE_TYPES[0], {
+				value: value_string === 'null' ? null : undefined,
+			});
 		}
 
 		if (RE_VARIABLE_DIGIT.test(value_string)) {
@@ -332,6 +330,14 @@ export function parse(marks: Mark[]): Node[] {
 			return new Node(NODE_TYPES[1], {
 				properties: [variable_root, ...variables_nested],
 			});
+		}
+
+		if (RE_VARIABLE_ARITHMETIC_LIKE.test(value_string)) {
+			throw new NanoError(`Arithmetic operators are not supported: "${ value_string }"`);
+		}
+
+		if (RE_VARIABLE_OBJECT_LIKE.test(value_string)) {
+			throw new NanoError(`Inline object or array variables are not supported`);
 		}
 
 		const variable_parts = value_string.split(RE_ACCESS_DOT).map(v => v.trim());
