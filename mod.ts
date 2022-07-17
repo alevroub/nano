@@ -271,7 +271,6 @@ export function parse(marks: Mark[]): Node[] {
 	const RE_OPERATOR_OR = /( \|\| )/;
 	const RE_OPERATOR_LOGICAL = /( ?\!(?!\=)| \&\& | \|\| )/g;
 	const RE_OPERATOR_BINARY = / ?(==|!=|>=|<=|>|<) ?/g;
-	const RE_OPERATOR_UNARY = / ?(!)/g;
 	const RE_OPERATOR_FILTER = / ?\| ?/;
 	const RE_OPERATOR_TERNARY = /[?:]/;
 	const RE_OPERATOR_INDEX = /\, ?/;
@@ -329,7 +328,7 @@ export function parse(marks: Mark[]): Node[] {
 
 		const variable_parts = value_string.split(RE_ACCESS_DOT).map(v => v.trim());
 
-		for (let part of variable_parts) {
+		for (const part of variable_parts) {
 			if (!RE_VARIABLE_EMPTY.test(part) && !RE_VARIABLE_VALID.test(part)) {
 				throw new NanoError(`Invalid variable name: "${value_string}"`);
 			}
