@@ -14,16 +14,16 @@ const data = {
 };
 
 const methods = {
-	upper: v => v.toUpperCase(),
-	lower: v => v.toLowerCase(),
-	first: v => v[0],
-	repeat: v => v.repeat(5),
-	minus: v => v === -10,
-	keys: v => Object.keys(v),
-	type: v => typeof v,
+	upper: (v: any) => v.toUpperCase(),
+	lower: (v: any) => v.toLowerCase(),
+	first: (v: any) => v[0],
+	repeat: (v: any) => v.repeat(5),
+	minus: (v: any) => v === -10,
+	keys: (v: any) => Object.keys(v),
+	type: (v: any) => typeof v,
 };
 
 // const result = await parse(scan(input));
-const result = await render(input, data, methods, { show_comments: true });
+const result = await render(input, data, methods);
 
 console.log(JSON.stringify(result, null, 3))
