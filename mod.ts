@@ -50,7 +50,7 @@
  *
  **/
 
-import { join as join_path } from "https://deno.land/std@0.148.0/path/mod.ts";
+import { join as join_path } from 'https://deno.land/std@0.148.0/path/mod.ts';
 
 class NanoError extends Error {
 	public name = 'NanoError';
@@ -333,7 +333,7 @@ export function parse(marks: Mark[]): Node[] {
 		}
 
 		if (RE_VARIABLE_ARITHMETIC_LIKE.test(value_string)) {
-			throw new NanoError(`Arithmetic operators are not supported: "${ value_string }"`);
+			throw new NanoError(`Arithmetic operators are not supported: "${value_string}"`);
 		}
 
 		if (RE_VARIABLE_OBJECT_LIKE.test(value_string)) {
@@ -775,7 +775,7 @@ export async function compile(nodes: Node[], input_data: NanoInputData = {}, inp
 	}
 
 	async function compile_tag_import(node: Node): Promise<string> {
-		const import_path_dir = compile_options.import_directory || default_options.import_directory || "";
+		const import_path_dir = compile_options.import_directory || default_options.import_directory || '';
 		const import_file_path = join_path(import_path_dir, node.path);
 
 		try {
@@ -793,7 +793,7 @@ export async function compile(nodes: Node[], input_data: NanoInputData = {}, inp
 			}
 
 			return compile(parse(scan(import_file)), import_data, input_methods, compile_options);
-		} catch(error) {
+		} catch (error) {
 			throw new NanoError(`Imported file does not exist: ${import_file_path}`);
 		}
 	}
