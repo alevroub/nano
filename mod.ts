@@ -2,7 +2,7 @@
 
 /**
  *
- * 	v0.1.0
+ * 	v0.1.1
  *
  * 	Nano is a template engine initially made for use with Deno Deploy, which currently
  * 	doesn't support template engines that rely on eval() for evaluating expressions
