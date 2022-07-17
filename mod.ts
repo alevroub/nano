@@ -255,7 +255,7 @@ const NODE_TYPES = [
 export function parse(marks: Mark[]): Node[] {
 	const RE_ACCESS_DOT = /\./;
 	const RE_ACCESS_BRACKET = /\[["']|['"]\]/;
-	const RE_EXPRESSION_ARITHMETIC_LIKE = /[\+\-\*\/\%]/;
+	const RE_VARIABLE_ARITHMETIC_LIKE = /[\+\-\*\/\%]/;
 	const RE_VARIABLE_OBJECT_LIKE = /[\{\}\[\]]/;
 	const RE_VARIABLE_EMPTY = /^['"]['"]$/;
 	const RE_VARIABLE_IN_QUOTES = /^['"].+?['"]$/;
@@ -288,6 +288,14 @@ export function parse(marks: Mark[]): Node[] {
 			return new Node(NODE_TYPES[0], {
 				value: value_string.slice(1, -1),
 			});
+		}
+
+		if (RE_VARIABLE_ARITHMETIC_LIKE.test(value_string)) {
+			throw new NanoError(`Arithmetic operators are not supported: "${ value_string }"`);
+		}
+
+		if (RE_VARIABLE_OBJECT_LIKE.test(value_string)) {
+			throw new NanoError(`Inline object or array variables are not supported`);
 		}
 
 		if (RE_VARIABLE_DIGIT.test(value_string)) {
