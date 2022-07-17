@@ -269,7 +269,7 @@ export function parse(marks: Mark[]): Node[] {
 	const RE_OPERATOR_NOT = /(\!(?!\=))/;
 	const RE_OPERATOR_AND = /( \&\& )/;
 	const RE_OPERATOR_OR = /( \|\| )/;
-	const RE_OPERATOR_CONDITIONAL = /(?=([^"]*"[^"]*")*[^"]*$)(?=)[?:]/g;
+	const RE_OPERATOR_CONDITIONAL = / \? | \: /;
 	const RE_OPERATOR_LOGICAL = /( ?\!(?!\=)| \&\& | \|\| )/g;
 	const RE_OPERATOR_BINARY = / ?(==|!=|>=|<=|>|<) ?/g;
 	const RE_OPERATOR_FILTER = / ?\| ?/;
@@ -375,7 +375,7 @@ export function parse(marks: Mark[]): Node[] {
 	}
 
 	function parse_expression_conditional(expression_string: string): Node {
-		const statement_parts = expression_string.split(RE_OPERATOR_CONDITIONAL).filter(v => v).map(v => v.trim());
+		const statement_parts = expression_string.split(RE_OPERATOR_CONDITIONAL).map(v => v.trim());
 
 		if (statement_parts.length < 3) {
 			throw new NanoError('Invalid conditional expression');
