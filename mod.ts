@@ -616,11 +616,11 @@ type NanoInputMethods = {
 
 type NanoOptions = {
 	display_comments?: boolean;
-	import_path?: string;
+	import_directory?: string;
 };
 
 export async function compile(nodes: Node[], input_data: NanoInputData = {}, input_methods: NanoInputMethods = {}, input_options?: NanoOptions): Promise<string> {
-	const default_options: NanoOptions = { display_comments: false, import_path: '' };
+	const default_options: NanoOptions = { display_comments: false, import_directory: '' };
 	const compile_options: NanoOptions = { ...default_options, ...input_options };
 
 	const output: string[] = [];
@@ -761,7 +761,7 @@ export async function compile(nodes: Node[], input_data: NanoInputData = {}, inp
 	}
 
 	async function compile_tag_import(node: Node): Promise<string> {
-		const import_path_dir = compile_options.import_path || default_options.import_path || "";
+		const import_path_dir = compile_options.import_directory || default_options.import_directory || "";
 		const import_file_path = join_path(import_path_dir, node.path);
 
 		try {
