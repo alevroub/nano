@@ -1,11 +1,12 @@
 import { parse, scan, render } from './mod.ts';
 
 const input = `
-	{{ boolean == true ? "YES" : "NO" }}
+	{{ "what ? " == "what ? " ? 'it is' : 'nope' }}
 `;
 
 const data = {
 	boolean: true,
+	null_thing: null,
 	number: 100,
 	string: "bbb",
 	nested: { thing: "100" },
@@ -23,7 +24,10 @@ const methods = {
 	type: (v: any) => typeof v,
 };
 
-// const result = await parse(scan(input));
-const result = await render(input, data, methods);
-
-console.log(JSON.stringify(result, null, 3))
+try {
+	// const result = await parse(scan(input));
+	const result = await render(input, data, methods);
+	console.log(JSON.stringify(result, null, 3))
+} catch(error) {
+	console.log(error)
+}
