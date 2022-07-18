@@ -399,7 +399,7 @@ export function parse(marks: Mark[]): Node[] {
 				}
 			}
 
-			if (statement_parts.length < 3) {
+			if (statement_parts.length !== 3) {
 				throw new NanoError(`Invalid conditional expression: {{ ${expression_string} }}`);
 			}
 
