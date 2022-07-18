@@ -2,6 +2,7 @@ import { render } from './mod.ts';
 
 const tests = [
 	[`{{ nested.not.defined }}`, ``],
+	[`{{ "confusing ? : string ? " | length > 1 ? "a" : "b ? a: a" }}`, `a`],
 	[`{{ undefined_variable ? "a" : "b" }}`, `b`],
 	[`{{ !undefined_variable ? "a" : "b" }}`, `a`],
 	[`{{ !undefined_variable && number == 100 ? "a" : "b" }}`, `a`],
@@ -54,6 +55,7 @@ const methods = {
 	first: v => v[0],
 	repeat: v => v.repeat(5),
 	minus: v => v === -10,
+	length: v => v.length,
 	keys: v => Object.keys(v),
 	type: v => typeof v,
 };
