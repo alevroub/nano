@@ -292,8 +292,15 @@ export function parse(marks: Mark[]): Node[] {
 		}
 
 		if (RE_VARIABLE_FALSY.test(value_string)) {
+			function return_falsy_value() {
+				switch (value_string) {
+					case 'null': return null;
+					case 'undefined': return undefined;
+				}
+			}
+
 			return new Node(NODE_TYPES[0], {
-				value: value_string === 'null' ? null : undefined,
+				value: return_falsy_value(),
 			});
 		}
 
