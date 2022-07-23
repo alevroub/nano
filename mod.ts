@@ -22,9 +22,8 @@
  *
  * 	INB4
  * 	|	should have
- * 	|		[ ] keep track of indentation and line numbers for debugging/error messages
+ * 	|		[ ] rewritten tokenizer that keeps track of indentation and line numbers
  * 	|	could have
- * 	|		[ ] expression groups ( )
  * 	|		[ ] proper mark/node types zzZzZzZzz...
  * 	|	won't have
  * 	|		[x] arithmetic operators + - / *
@@ -35,13 +34,12 @@
 /**
  *
  * 	SCAN
- * 	input -> tokens -> marks
+ * 	input -> marks
  *
- * 	lexer that splits the string builds a rough mark tree.
- * 	the goal in this step is to make sure the structure of all
- * 	blocks are valid, e.g. check for missing or duplicate tags.
- * 	invalid block statements or syntax errors are checked in the
- * 	next step when the marks are used to create nodes.
+ * 	lexer that splits the string input and builds an initial
+ * 	tree-structure. the goal of this step is to simply split
+ * 	between variables/blocks and plain html input while keeping
+ * 	the structure of nested blocks.
  *
  * 	|	0	BLOCK   		{% if/else/for %}
  * 	|	1	VARIABLE		{{ variable }}
